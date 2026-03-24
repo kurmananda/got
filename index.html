@@ -7,18 +7,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Quicksand:wght@300;500&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --gold: #ffcc33; 
-            --glow: rgba(255, 204, 51, 0.4); 
+            --gold: #ff6633; 
+            --glow: rgba(255, 102, 51, 0.4); 
             --bg: #020202; 
-            --line-dark: #2a220a; /* Darker, sophisticated line color */
+            --line-dark: #3a1a0a; /* Reddish brown */
         }
         
-        body { 
-            margin: 0; background: var(--bg); color: var(--gold); 
-            font-family: 'Cinzel', serif; font-weight: 400; overflow: hidden;
+       body { 
+            margin: 0; 
+            background: var(--bg); /* Keep the base black color here */
+            color: var(--gold); 
+            font-family: 'Cinzel', serif; 
+            font-weight: 400; 
+            overflow: hidden;
             text-shadow: 0 0 5px rgba(255, 204, 51, 0.3);
+            position: relative; /* Necessary for the pseudo-element positioning */
         }
 
+        /* The wallpaper layer */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: url('https://wallpapercave.com/wp/wp13023970.jpg') no-repeat center center;
+            background-size: cover;
+            opacity: 0.5; /* Half opacity */
+            z-index: -3; /* Placed behind everything, including stars */
+        }
         #stars-far {
             position: fixed; inset: -10%; width: 120%; height: 120%;
             background-image: radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)),
@@ -157,119 +172,119 @@ const width = window.innerWidth, height = window.innerHeight;
 
 const data = {
   "nodes": [
-    { "id": "IT", "name": "Iron Throne", "type": "center", "size": 100, "img": "https://img.icons8.com/color/100/iron-throne.png" },
+    { "id": "IT", "name": "Iron Throne", "type": "center", "size": 200, "img": "https://imgs.search.brave.com/9jYwBHzozSi00g1RB7266osRzu8aUoznduasj6JVcwg/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly92ZWN0/b3JpZmllZC5jb20v/aW1hZ2VzL2lyb24t/dGhyb25lLWljb24t/Ny5wbmc" },
 
-    /* --- HOUSE TARGARYEN (Extended from Aegon I) --- */
-    { "id": "TARG", "name": "House Targaryen", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/dragon.png" },
-    { "id": "aegon_i", "name": "Aegon I", "parent": "TARG", "size": 75, "str": "Conquest", "weak": "Dorne", "death": "Dead" , "img": "https://img.icons8.com/color/100/dragon.png", spouse: "Visenya & Rhaenys" },
-    { "id": "aenys_i", "name": "Aenys I", "parent": "aegon_i", "size": 70, "str": "Diplomacy", "weak": "Indecision", "death": "Dead" },
-    { "id": "maegor_i", "name": "Maegor I", "parent": "aegon_i", "size": 70, "str": "Terror", "weak": "Cruelty", "death": "Dead" },
-    { "id": "jaehaerys_i", "name": "Jaehaerys I", "parent": "aenys_i", "size": 70, "str": "Law", "weak": "Succession", "death": "Dead" },
-    { "id": "alysanne_t", "name": "Alysanne", "parent": "aenys_i", "size": 65, "str": "Charity", "weak": "Grief", "death": "Dead" },
-    { "id": "aemon_t1", "name": "Aemon", "parent": "jaehaerys_i", "size": 60, "str": "Duty", "weak": "Crossbows", "death": "Dead" },
-    { "id": "baelon_t", "name": "Baelon", "parent": "jaehaerys_i", "size": 60, "str": "Bravery", "weak": "Health", "death": "Dead" },
-    { "id": "viserys_i", "name": "Viserys I", "parent": "baelon_t", "size": 65, "str": "Feasts", "weak": "Passivity", "death": "Dead" },
-    { "id": "daemon_t", "name": "Daemon", "parent": "baelon_t", "size": 65, "str": "Combat", "weak": "Temper", "death": "Dead" },
-    { "id": "rhaenyra", "name": "Rhaenyra", "parent": "viserys_i", "size": 65, "str": "Tenacity", "weak": "Paranoia", "death": "Dead" },
-    { "id": "aegon_ii", "name": "Aegon II", "parent": "viserys_i", "size": 60, "str": "Will", "weak": "Lust", "death": "Dead" },
-    { "id": "helaena_t", "name": "Helaena", "parent": "viserys_i", "size": 60, "str": "Prophecy", "weak": "Depression", "death": "Dead" },
-    { "id": "aemond_t", "name": "Aemond", "parent": "viserys_i", "size": 60, "str": "Vhagar", "weak": "Eye", "death": "Dead" },
-    { "id": "daeron_t_son", "name": "Daeron the Daring", "parent": "viserys_i", "size": 55, "str": "Kindness", "weak": "Small", "death": "Dead" },
-    { "id": "jacaerys_v", "name": "Jacaerys Velaryon", "parent": "rhaenyra", "size": 60, "str": "Diplomacy", "weak": "Origin", "death": "Dead" },
-    { "id": "lucerys_v", "name": "Lucerys Velaryon", "parent": "rhaenyra", "size": 60, "str": "Obedience", "weak": "Arrogance", "death": "Dead" },
-    { "id": "joffrey_v", "name": "Joffrey Velaryon", "parent": "rhaenyra", "size": 55, "str": "Bravery", "weak": "Storm", "death": "Dead" },
-    { "id": "aegon_iii", "name": "Aegon III", "parent": "rhaenyra", "size": 65, "str": "Governance", "weak": "Sadness", "death": "Dead" },
-    { "id": "viserys_ii", "name": "Viserys II", "parent": "rhaenyra", "size": 65, "str": "Wisdom", "weak": "Health", "death": "Dead" },
-    { "id": "aegon_iv", "name": "Aegon IV", "parent": "viserys_ii", "size": 70, "str": "None", "weak": "Greed", "death": "Dead" },
-    { "id": "daeron_ii", "name": "Daeron II", "parent": "aegon_iv", "size": 65, "str": "Unity", "weak": "Physique", "death": "Dead" },
-    { "id": "daemon_bf", "name": "Daemon Blackfyre", "parent": "aegon_iv", "size": 65, "str": "Martial", "weak": "Legitimacy", "death": "Dead" },
-    { "id": "brynden_rivers", "name": "Brynden Rivers", "parent": "aegon_iv", "size": 65, "str": "Sorcery", "weak": "Loyalty", "death": "Dead" },
-    { "id": "shiera_seastar", "name": "Shiera Seastar", "parent": "aegon_iv", "size": 60, "str": "Beauty", "weak": "Mystery", "death": "Dead" },
-    { "id": "baelor_break", "name": "Baelor Breakspear", "parent": "daeron_ii", "size": 60, "str": "Honor", "weak": "Fragility", "death": "Dead" },
-    { "id": "maekar_i", "name": "Maekar I", "parent": "daeron_ii", "size": 60, "str": "Strength", "weak": "Solitude", "death": "Dead" },
-    { "id": "aemon_maester", "name": "Maester Aemon", "parent": "maekar_i", "size": 65, "str": "Knowledge", "weak": "Vows", "death": "Dead" },
-    { "id": "aegon_v", "name": "Aegon V", "parent": "maekar_i", "size": 70, "str": "Reform", "weak": "Summerhall", "death": "Dead" },
-    { "id": "duncan_small", "name": "Prince Duncan", "parent": "aegon_v", "size": 60, "str": "Love", "weak": "Jenny", "death": "Dead" },
-    { "id": "jaehaerys_ii", "name": "Jaehaerys II", "parent": "aegon_v", "size": 65, "str": "Thought", "weak": "Sickly", "death": "Dead" },
-    { "id": "aerys_ii", "name": "Aerys II", "parent": "jaehaerys_ii", "size": 75, "str": "Lineage", "weak": "Madness", "death": "Dead" },
-    { "id": "rhaegar", "name": "Rhaegar", "parent": "aerys_ii", "size": 70, "str": "Charisma", "weak": "Obsession", "death": "Dead" },
-    { "id": "viserys_t", "name": "Viserys T", "parent": "aerys_ii", "size": 60, "str": "Persistence", "weak": "Pride", "death": "Dead" },
-    { "id": "dany", "name": "Daenerys", "parent": "aerys_ii", "size": 70, "str": "Dragons", "weak": "Mercy", "death": "Dead" },
-    { "id": "jon_s", "name": "Jon Snow", "parent": "rhaegar", "size": 65, "str": "Blade", "weak": "Honor", "death": "Alive" },
+    /* --- HOUSE TARGARYEN --- */
+    { "id": "TARG", "name": "House Targaryen", "parent": "IT", "type": "house", "size": 130, "img": "https://img.icons8.com/color/100/dragon.png" },
+    { "id": "aegon_i", "name": "Aegon I", "parent": "TARG", "size": 100, "str": "Conquest", "weak": "Dorne", "death": "Dead", "spouse": "Visenya & Rhaenys" },
+    { "id": "aenys_i", "name": "Aenys I", "parent": "aegon_i", "size": 95, "str": "Diplomacy", "weak": "Indecision", "death": "Dead", "spouse": "Alyssa Velaryon" },
+    { "id": "maegor_i", "name": "Maegor I", "parent": "aegon_i", "size": 95, "str": "Terror", "weak": "Cruelty", "death": "Dead", "spouse": "Ceryse Hightower & Alys Harroway & Tyanna" },
+    { "id": "jaehaerys_i", "name": "Jaehaerys I", "parent": "aenys_i", "size": 95, "str": "Law", "weak": "Succession", "death": "Dead", "spouse": "Alysanne" },
+    { "id": "alysanne_t", "name": "Alysanne", "parent": "aenys_i", "size": 90, "str": "Charity", "weak": "Grief", "death": "Dead", "spouse": "Jaehaerys I" },
+    { "id": "aemon_t1", "name": "Aemon", "parent": "jaehaerys_i", "size": 85, "str": "Duty", "weak": "Crossbows", "death": "Dead", "spouse": "Jocelyn Baratheon" },
+    { "id": "baelon_t", "name": "Baelon", "parent": "jaehaerys_i", "size": 85, "str": "Bravery", "weak": "Health", "death": "Dead", "spouse": "Alyssa Targaryen" },
+    { "id": "viserys_i", "name": "Viserys I", "parent": "baelon_t", "size": 90, "str": "Feasts", "weak": "Passivity", "death": "Dead", "spouse": "Aemma Arryn & Alicent Hightower" },
+    { "id": "daemon_t", "name": "Daemon", "parent": "baelon_t", "size": 90, "str": "Combat", "weak": "Temper", "death": "Dead", "spouse": "Rhea Royce & Laena Velaryon & Rhaenyra" },
+    { "id": "rhaenyra", "name": "Rhaenyra", "parent": "viserys_i", "size": 90, "str": "Tenacity", "weak": "Paranoia", "death": "Dead", "spouse": "Laenor Velaryon & Daemon" },
+    { "id": "aegon_ii", "name": "Aegon II", "parent": "viserys_i", "size": 85, "str": "Will", "weak": "Lust", "death": "Dead", "spouse": "Helaena" },
+    { "id": "helaena_t", "name": "Helaena", "parent": "viserys_i", "size": 85, "str": "Prophecy", "weak": "Depression", "death": "Dead", "spouse": "Aegon II" },
+    { "id": "aemond_t", "name": "Aemond", "parent": "viserys_i", "size": 85, "str": "Vhagar", "weak": "Eye", "death": "Dead", "spouse": null },
+    { "id": "daeron_t_son", "name": "Daeron the Daring", "parent": "viserys_i", "size": 80, "str": "Kindness", "weak": "Small", "death": "Dead", "spouse": null },
+    { "id": "jacaerys_v", "name": "Jacaerys Velaryon", "parent": "rhaenyra", "size": 85, "str": "Diplomacy", "weak": "Origin", "death": "Dead", "spouse": null },
+    { "id": "lucerys_v", "name": "Lucerys Velaryon", "parent": "rhaenyra", "size": 85, "str": "Obedience", "weak": "Arrogance", "death": "Dead", "spouse": null },
+    { "id": "joffrey_v", "name": "Joffrey Velaryon", "parent": "rhaenyra", "size": 80, "str": "Bravery", "weak": "Storm", "death": "Dead", "spouse": null },
+    { "id": "aegon_iii", "name": "Aegon III", "parent": "rhaenyra", "size": 90, "str": "Governance", "weak": "Sadness", "death": "Dead", "spouse": "Daenaera Velaryon" },
+    { "id": "viserys_ii", "name": "Viserys II", "parent": "rhaenyra", "size": 90, "str": "Wisdom", "weak": "Health", "death": "Dead", "spouse": "Larra Rogare" },
+    { "id": "aegon_iv", "name": "Aegon IV", "parent": "viserys_ii", "size": 95, "str": "None", "weak": "Greed", "death": "Dead", "spouse": "Naerys" },
+    { "id": "daeron_ii", "name": "Daeron II", "parent": "aegon_iv", "size": 90, "str": "Unity", "weak": "Physique", "death": "Dead", "spouse": "Myriah Martell" },
+    { "id": "daemon_bf", "name": "Daemon Blackfyre", "parent": "aegon_iv", "size": 90, "str": "Martial", "weak": "Legitimacy", "death": "Dead", "spouse": "Rohanne" },
+    { "id": "brynden_rivers", "name": "Brynden Rivers", "parent": "aegon_iv", "size": 90, "str": "Sorcery", "weak": "Loyalty", "death": "Dead", "spouse": null },
+    { "id": "shiera_seastar", "name": "Shiera Seastar", "parent": "aegon_iv", "size": 85, "str": "Beauty", "weak": "Mystery", "death": "Dead", "spouse": null },
+    { "id": "baelor_break", "name": "Baelor Breakspear", "parent": "daeron_ii", "size": 85, "str": "Honor", "weak": "Fragility", "death": "Dead", "spouse": "Jena Dondarrion" },
+    { "id": "maekar_i", "name": "Maekar I", "parent": "daeron_ii", "size": 85, "str": "Strength", "weak": "Solitude", "death": "Dead", "spouse": "Dyanna Dayne" },
+    { "id": "aemon_maester", "name": "Maester Aemon", "parent": "maekar_i", "size": 90, "str": "Knowledge", "weak": "Vows", "death": "Dead", "spouse": null },
+    { "id": "aegon_v", "name": "Aegon V", "parent": "maekar_i", "size": 95, "str": "Reform", "weak": "Summerhall", "death": "Dead", "spouse": "Betha Blackwood" },
+    { "id": "duncan_small", "name": "Prince Duncan", "parent": "aegon_v", "size": 85, "str": "Love", "weak": "Jenny", "death": "Dead", "spouse": "Jenny of Oldstones" },
+    { "id": "jaehaerys_ii", "name": "Jaehaerys II", "parent": "aegon_v", "size": 90, "str": "Thought", "weak": "Sickly", "death": "Dead", "spouse": "Shaera" },
+    { "id": "aerys_ii", "name": "Aerys II", "parent": "jaehaerys_ii", "size": 100, "str": "Lineage", "weak": "Madness", "death": "Dead", "spouse": "Rhaella" },
+    { "id": "rhaegar", "name": "Rhaegar", "parent": "aerys_ii", "size": 95, "str": "Charisma", "weak": "Obsession", "death": "Dead", "spouse": "Elia Martell & Lyanna Stark" },
+    { "id": "viserys_t", "name": "Viserys T", "parent": "aerys_ii", "size": 85, "str": "Persistence", "weak": "Pride", "death": "Dead", "spouse": null },
+    { "id": "dany", "name": "Daenerys", "parent": "aerys_ii", "size": 95, "str": "Dragons", "weak": "Mercy", "death": "Dead", "spouse": "Khal Drogo & Jon Snow" },
+    { "id": "jon_s", "name": "Jon Snow", "parent": "rhaegar", "size": 90, "str": "Blade", "weak": "Honor", "death": "Alive", "spouse": "Daenerys" },
 
     /* --- HOUSE BARATHEON --- */
-    { "id": "BARA", "name": "House Baratheon", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/deer.png" },
-    { "id": "orys_b", "name": "Orys", "parent": "BARA", "size": 75, "str": "Command", "weak": "Origin", "death": "Dead" },
-    { "id": "steffon_b", "name": "Steffon", "parent": "BARA", "size": 70, "str": "Stability", "weak": "Storms", "death": "Dead" },
-    { "id": "robert", "name": "Robert", "parent": "steffon_b", "size": 75, "str": "Warfare", "weak": "Excess", "death": "Dead" },
-    { "id": "stannis", "name": "Stannis", "parent": "steffon_b", "size": 70, "str": "Discipline", "weak": "Rigidity", "death": "Dead" },
-    { "id": "renly", "name": "Renly", "parent": "steffon_b", "size": 70, "str": "Charm", "weak": "Hubris", "death": "Dead" },
-    { "id": "joffrey", "name": "Joffrey", "parent": "robert", "size": 60, "str": "Power", "weak": "Cruelty", "death": "Dead" },
-    { "id": "myrcella", "name": "Myrcella", "parent": "robert", "size": 60, "str": "Grace", "weak": "Dorne", "death": "Dead" },
-    { "id": "tommen", "name": "Tommen", "parent": "robert", "size": 60, "str": "Kindness", "weak": "Youth", "death": "Dead" },
-    { "id": "gendry", "name": "Gendry", "parent": "robert", "size": 55, "str": "Strength", "weak": "Birth", "death": "Alive" },
-    { "id": "shireen", "name": "Shireen", "parent": "stannis", "size": 50, "str": "Learning", "weak": "Greyscale", "death": "Dead" },
-    { "id": "edric_storm", "name": "Edric Storm", "parent": "robert", "size": 50, "str": "Lineage", "weak": "Bastardy", "death": "Alive" },
-    { "id": "mya_stone", "name": "Mya Stone", "parent": "robert", "size": 50, "str": "Hiking", "weak": "Fear", "death": "Alive" },
+    { "id": "BARA", "name": "House Baratheon", "parent": "IT", "type": "house", "size": 130, "img": "https://img.icons8.com/color/100/deer.png" },
+    { "id": "orys_b", "name": "Orys", "parent": "BARA", "size": 100, "str": "Command", "weak": "Origin", "death": "Dead", "spouse": "Argella Durrandon" },
+    { "id": "steffon_b", "name": "Steffon", "parent": "BARA", "size": 95, "str": "Stability", "weak": "Storms", "death": "Dead", "spouse": "Cassana Estermont" },
+    { "id": "robert", "name": "Robert", "parent": "steffon_b", "size": 100, "str": "Warfare", "weak": "Excess", "death": "Dead", "spouse": "Cersei" },
+    { "id": "stannis", "name": "Stannis", "parent": "steffon_b", "size": 95, "str": "Discipline", "weak": "Rigidity", "death": "Dead", "spouse": "Selyse Florent" },
+    { "id": "renly", "name": "Renly", "parent": "steffon_b", "size": 95, "str": "Charm", "weak": "Hubris", "death": "Dead", "spouse": "Margaery Tyrell" },
+    { "id": "joffrey", "name": "Joffrey", "parent": "robert", "size": 85, "str": "Power", "weak": "Cruelty", "death": "Dead", "spouse": "Margaery" },
+    { "id": "myrcella", "name": "Myrcella", "parent": "robert", "size": 85, "str": "Grace", "weak": "Dorne", "death": "Dead", "spouse": "Trystane Martell" },
+    { "id": "tommen", "name": "Tommen", "parent": "robert", "size": 85, "str": "Kindness", "weak": "Youth", "death": "Dead", "spouse": "Margaery" },
+    { "id": "gendry", "name": "Gendry", "parent": "robert", "size": 80, "str": "Strength", "weak": "Birth", "death": "Alive", "spouse": null },
+    { "id": "shireen", "name": "Shireen", "parent": "stannis", "size": 75, "str": "Learning", "weak": "Greyscale", "death": "Dead", "spouse": null },
+    { "id": "edric_storm", "name": "Edric Storm", "parent": "robert", "size": 75, "str": "Lineage", "weak": "Bastardy", "death": "Alive", "spouse": null },
+    { "id": "mya_stone", "name": "Mya Stone", "parent": "robert", "size": 75, "str": "Hiking", "weak": "Fear", "death": "Alive", "spouse": null },
 
     /* --- HOUSE STARK --- */
-    { "id": "STARK", "name": "House Stark", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/wolf.png" },
-    { "id": "rickard_s", "name": "Rickard", "parent": "STARK", "size": 75, "str": "Ambition", "weak": "Fire", "death": "Dead" },
-    { "id": "brandon_s", "name": "Brandon", "parent": "rickard_s", "size": 65, "str": "Sword", "weak": "Temper", "death": "Dead" },
-    { "id": "ned", "name": "Ned", "parent": "rickard_s", "size": 70, "str": "Loyalty", "weak": "Trust", "death": "Dead" },
-    { "id": "lyanna_s", "name": "Lyanna", "parent": "rickard_s", "size": 65, "str": "Will", "weak": "Fate", "death": "Dead" },
-    { "id": "benjen", "name": "Benjen", "parent": "rickard_s", "size": 60, "str": "Stealth", "weak": "Vows", "death": "Dead" },
-    { "id": "robb", "name": "Robb", "parent": "ned", "size": 60, "str": "Strategy", "weak": "Oaths", "death": "Dead" },
-    { "id": "sansa", "name": "Sansa", "parent": "ned", "size": 60, "str": "Survival", "weak": "Naivety", "death": "Alive" },
-    { "id": "arya", "name": "Arya", "parent": "ned", "size": 60, "str": "Assassination", "weak": "Vendetta", "death": "Alive" },
-    { "id": "bran", "name": "Bran", "parent": "ned", "size": 60, "str": "Magic", "weak": "Body", "death": "Alive" },
-    { "id": "rickon", "name": "Rickon", "parent": "ned", "size": 55, "str": "Wild", "weak": "Age", "death": "Dead" },
+    { "id": "STARK", "name": "House Stark", "parent": "IT", "type": "house", "size": 130, "img": "https://img.icons8.com/color/100/wolf.png" },
+    { "id": "rickard_s", "name": "Rickard", "parent": "STARK", "size": 100, "str": "Ambition", "weak": "Fire", "death": "Dead", "spouse": "Lyarra Stark" },
+    { "id": "brandon_s", "name": "Brandon", "parent": "rickard_s", "size": 90, "str": "Sword", "weak": "Temper", "death": "Dead", "spouse": null },
+    { "id": "ned", "name": "Ned", "parent": "rickard_s", "size": 95, "str": "Loyalty", "weak": "Trust", "death": "Dead", "spouse": "Catelyn" },
+    { "id": "lyanna_s", "name": "Lyanna", "parent": "rickard_s", "size": 90, "str": "Will", "weak": "Fate", "death": "Dead", "spouse": "Rhaegar" },
+    { "id": "benjen", "name": "Benjen", "parent": "rickard_s", "size": 85, "str": "Stealth", "weak": "Vows", "death": "Dead", "spouse": null },
+    { "id": "robb", "name": "Robb", "parent": "ned", "size": 85, "str": "Strategy", "weak": "Oaths", "death": "Dead", "spouse": "Talisa" },
+    { "id": "sansa", "name": "Sansa", "parent": "ned", "size": 85, "str": "Survival", "weak": "Naivety", "death": "Alive", "spouse": "Tyrion & Ramsay" },
+    { "id": "arya", "name": "Arya", "parent": "ned", "size": 85, "str": "Assassination", "weak": "Vendetta", "death": "Alive", "spouse": null },
+    { "id": "bran", "name": "Bran", "parent": "ned", "size": 85, "str": "Magic", "weak": "Body", "death": "Alive", "spouse": null },
+    { "id": "rickon", "name": "Rickon", "parent": "ned", "size": 80, "str": "Wild", "weak": "Age", "death": "Dead", "spouse": null },
 
     /* --- HOUSE LANNISTER --- */
-    { "id": "LANN", "name": "House Lannister", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/lion.png" },
-    { "id": "tytos_l", "name": "Tytos", "parent": "LANN", "size": 70, "str": "Friendship", "weak": "Weakness", "death": "Dead" },
-    { "id": "tywin", "name": "Tywin", "parent": "tytos_l", "size": 75, "str": "Governance", "weak": "Family", "death": "Dead" },
-    { "id": "kevan", "name": "Kevan", "parent": "tytos_l", "size": 65, "str": "Duty", "weak": "Tywin", "death": "Dead" },
-    { "id": "tygett", "name": "Tygett", "parent": "tytos_l", "size": 60, "str": "Martial", "weak": "Shadow", "death": "Dead" },
-    { "id": "gerion", "name": "Gerion", "parent": "tytos_l", "size": 60, "str": "Wit", "weak": "Lost", "death": "Dead" },
-    { "id": "jaime", "name": "Jaime", "parent": "tywin", "size": 65, "str": "Reflexes", "weak": "Cersei", "death": "Dead" },
-    { "id": "cersei", "name": "Cersei", "parent": "tywin", "size": 65, "str": "Motherhood", "weak": "Paranoia", "death": "Dead" },
-    { "id": "tyrion", "name": "Tyrion", "parent": "tywin", "size": 65, "str": "Logic", "weak": "Vices", "death": "Alive" },
-    { "id": "lancel", "name": "Lancel", "parent": "kevan", "size": 55, "str": "Faith", "weak": "Regret", "death": "Dead" },
+    { "id": "LANN", "name": "House Lannister", "parent": "IT", "type": "house", "size": 130, "img": "https://img.icons8.com/color/100/lion.png" },
+    { "id": "tytos_l", "name": "Tytos", "parent": "LANN", "size": 95, "str": "Friendship", "weak": "Weakness", "death": "Dead", "spouse": "Jeyne Marbrand" },
+    { "id": "tywin", "name": "Tywin", "parent": "tytos_l", "size": 100, "str": "Governance", "weak": "Family", "death": "Dead", "spouse": "Joanna" },
+    { "id": "kevan", "name": "Kevan", "parent": "tytos_l", "size": 90, "str": "Duty", "weak": "Tywin", "death": "Dead", "spouse": "Dorna Swyft" },
+    { "id": "tygett", "name": "Tygett", "parent": "tytos_l", "size": 85, "str": "Martial", "weak": "Shadow", "death": "Dead", "spouse": null },
+    { "id": "gerion", "name": "Gerion", "parent": "tytos_l", "size": 85, "str": "Wit", "weak": "Lost", "death": "Dead", "spouse": null },
+    { "id": "jaime", "name": "Jaime", "parent": "tywin", "size": 90, "str": "Reflexes", "weak": "Cersei", "death": "Dead", "spouse": "Cersei" },
+    { "id": "cersei", "name": "Cersei", "parent": "tywin", "size": 90, "str": "Motherhood", "weak": "Paranoia", "death": "Dead", "spouse": "Robert & Jaime" },
+    { "id": "tyrion", "name": "Tyrion", "parent": "tywin", "size": 90, "str": "Logic", "weak": "Vices", "death": "Alive", "spouse": "Sansa" },
+    { "id": "lancel", "name": "Lancel", "parent": "kevan", "size": 80, "str": "Faith", "weak": "Regret", "death": "Dead", "spouse": null },
 
-    /* HOUSE TYRELL (Olenna -> Mace -> 4 kids) */
-    { "id": "TYRE", "name": "House Tyrell", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/rose.png" },
-    { "id": "olenna", "name": "Olenna", "parent": "TYRE", "size": 75, "str": "Wit", "weak": "Age", "death": "Dead" },
-    { "id": "mace_t", "name": "Mace", "parent": "olenna", "size": 65, "str": "Wealth", "weak": "Bluster", "death": "Dead" },
-    { "id": "willas", "name": "Willas", "parent": "mace_t", "size": 60, "str": "Knowledge", "weak": "Leg", "death": "Alive" },
-    { "id": "garlan", "name": "Garlan", "parent": "mace_t", "size": 60, "str": "Honor", "weak": "Selfless", "death": "Alive" },
-    { "id": "loras", "name": "Loras", "parent": "mace_t", "size": 60, "str": "Speed", "weak": "Passion", "death": "Dead" },
-    { "id": "margaery", "name": "Margaery", "parent": "mace_t", "size": 65, "str": "Charity", "weak": "Game", "death": "Dead" },
+    /* --- HOUSE TYRELL --- */
+    { "id": "TYRE", "name": "House Tyrell", "parent": "IT", "type": "house", "size": 130, "img": "https://img.icons8.com/color/100/rose.png" },
+    { "id": "olenna", "name": "Olenna", "parent": "TYRE", "size": 100, "str": "Wit", "weak": "Age", "death": "Dead", "spouse": "Luthor Tyrell" },
+    { "id": "mace_t", "name": "Mace", "parent": "olenna", "size": 90, "str": "Wealth", "weak": "Bluster", "death": "Dead", "spouse": "Alerie Hightower" },
+    { "id": "willas", "name": "Willas", "parent": "mace_t", "size": 85, "str": "Knowledge", "weak": "Leg", "death": "Alive", "spouse": null },
+    { "id": "garlan", "name": "Garlan", "parent": "mace_t", "size": 85, "str": "Honor", "weak": "Selfless", "death": "Alive", "spouse": "Leonette Fossoway" },
+    { "id": "loras", "name": "Loras", "parent": "mace_t", "size": 85, "str": "Speed", "weak": "Passion", "death": "Dead", "spouse": null },
+    { "id": "margaery", "name": "Margaery", "parent": "mace_t", "size": 90, "str": "Charity", "weak": "Game", "death": "Dead", "spouse": "Renly & Joffrey & Tommen" },
 
-    /* HOUSE MARTELL (Doran/Oberyn and 8 Sand Snakes) */
-    { "id": "MART", "name": "House Martell", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/sun.png" },
-    { "id": "doran", "name": "Doran", "parent": "MART", "size": 70, "str": "Caution", "weak": "Gout", "death": "Dead" },
-    { "id": "oberyn", "name": "Oberyn", "parent": "MART", "size": 70, "str": "Poisons", "weak": "Vengeance", "death": "Dead" },
-    { "id": "arianne", "name": "Arianne", "parent": "doran", "size": 60, "str": "Seduction", "weak": "Rash", "death": "Alive" },
-    { "id": "trystane", "name": "Trystane", "parent": "doran", "size": 55, "str": "Kindness", "weak": "Innocence", "death": "Dead" },
-    { "id": "obara", "name": "Obara", "parent": "oberyn", "size": 55, "str": "Spear", "weak": "Stiff", "death": "Dead" },
-    { "id": "nymeria_s", "name": "Nymeria", "parent": "oberyn", "size": 55, "str": "Dagger", "weak": "Arrogance", "death": "Dead" },
-    { "id": "tyene", "name": "Tyene", "parent": "oberyn", "size": 55, "str": "Herbology", "weak": "Faith", "death": "Dead" },
+    /* --- HOUSE MARTELL --- */
+    { "id": "MART", "name": "House Martell", "parent": "IT", "type": "house", "size": 130, "img": "https://img.icons8.com/color/100/sun.png" },
+    { "id": "doran", "name": "Doran", "parent": "MART", "size": 95, "str": "Caution", "weak": "Gout", "death": "Dead", "spouse": "Mellario" },
+    { "id": "oberyn", "name": "Oberyn", "parent": "MART", "size": 95, "str": "Poisons", "weak": "Vengeance", "death": "Dead", "spouse": "Ellaria Sand" },
+    { "id": "arianne", "name": "Arianne", "parent": "doran", "size": 85, "str": "Seduction", "weak": "Rash", "death": "Alive", "spouse": null },
+    { "id": "trystane", "name": "Trystane", "parent": "doran", "size": 80, "str": "Kindness", "weak": "Innocence", "death": "Dead", "spouse": "Myrcella" },
+    { "id": "obara", "name": "Obara", "parent": "oberyn", "size": 80, "str": "Spear", "weak": "Stiff", "death": "Dead", "spouse": null },
+    { "id": "nymeria_s", "name": "Nymeria", "parent": "oberyn", "size": 80, "str": "Dagger", "weak": "Arrogance", "death": "Dead", "spouse": null },
+    { "id": "tyene", "name": "Tyene", "parent": "oberyn", "size": 80, "str": "Herbology", "weak": "Faith", "death": "Dead", "spouse": null },
 
-    /* HOUSE GREYJOY (Quellon to Balon's line) */
-    { "id": "GREY", "name": "House Greyjoy", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/squid.png" },
-    { "id": "quellon", "name": "Quellon", "parent": "GREY", "size": 70, "str": "Reform", "weak": "Death", "death": "Dead" },
-    { "id": "balon", "name": "Balon", "parent": "quellon", "size": 65, "str": "Rigidity", "weak": "Old Ways", "death": "Dead" },
-    { "id": "euron", "name": "Euron", "parent": "quellon", "size": 65, "str": "Fear", "weak": "Chaos", "death": "Dead" },
-    { "id": "theon", "name": "Theon", "parent": "balon", "size": 60, "str": "Archery", "weak": "Identity", "death": "Dead" },
-    { "id": "yara", "name": "Yara", "parent": "balon", "size": 60, "str": "Sailing", "weak": "Love", "death": "Alive" },
+    /* --- HOUSE GREYJOY --- */
+    { "id": "GREY", "name": "House Greyjoy", "parent": "IT", "type": "house", "size": 130, "img": "https://img.icons8.com/external-vitaliy-gorbachev-blue-vitaly-gorbachev/60/external-squid-sea-life-vitaliy-gorbachev-blue-vitaly-gorbachev.png" },
+    { "id": "quellon", "name": "Quellon", "parent": "GREY", "size": 95, "str": "Reform", "weak": "Death", "death": "Dead", "spouse": "Multiple" },
+    { "id": "balon", "name": "Balon", "parent": "quellon", "size": 90, "str": "Rigidity", "weak": "Old Ways", "death": "Dead", "spouse": "Alannys Harlaw" },
+    { "id": "euron", "name": "Euron", "parent": "quellon", "size": 90, "str": "Fear", "weak": "Chaos", "death": "Dead", "spouse": null },
+    { "id": "theon", "name": "Theon", "parent": "balon", "size": 85, "str": "Archery", "weak": "Identity", "death": "Dead", "spouse": null },
+    { "id": "yara", "name": "Yara", "parent": "balon", "size": 85, "str": "Sailing", "weak": "Love", "death": "Alive", "spouse": null },
 
-    /* HOUSE TULLY */
-    { "id": "TULL", "name": "House Tully", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/fish.png" },
-    { "id": "hoster", "name": "Hoster", "parent": "TULL", "size": 70, "str": "Protocol", "weak": "Regrets", "death": "Dead" },
-    { "id": "catelyn", "name": "Catelyn", "parent": "hoster", "size": 65, "str": "Duty", "weak": "Family", "death": "Dead" },
-    { "id": "edmure", "name": "Edmure", "parent": "hoster", "size": 60, "str": "People", "weak": "Folly", "death": "Alive" },
-    { "id": "brynden_black", "name": "Brynden Tully", "parent": "TULL", "size": 65, "str": "Tactics", "weak": "Stubborn", "death": "Dead" }
+    /* --- HOUSE TULLY --- */
+    { "id": "TULL", "name": "House Tully", "parent": "IT", "type": "house", "size": 130, "img": "https://img.icons8.com/color/100/fish.png" },
+    { "id": "hoster", "name": "Hoster", "parent": "TULL", "size": 95, "str": "Protocol", "weak": "Regrets", "death": "Dead", "spouse": "Minisa Whent" },
+    { "id": "catelyn", "name": "Catelyn", "parent": "hoster", "size": 90, "str": "Duty", "weak": "Family", "death": "Dead", "spouse": "Ned" },
+    { "id": "edmure", "name": "Edmure", "parent": "hoster", "size": 85, "str": "People", "weak": "Folly", "death": "Alive", "spouse": "Roslin Frey" },
+    { "id": "brynden_black", "name": "Brynden Tully", "parent": "TULL", "size": 90, "str": "Tactics", "weak": "Stubborn", "death": "Dead", "spouse": null }
   ]
 };
 
@@ -353,8 +368,13 @@ function showCard(e, d) {
         d3.select("#c-weak").text(d.weak || "Mortal");
         d3.select("#c-death").text(d.death || "Dead").style("color", d.death === 'Alive' ? '#00ffaa' : '#ff4444');
         d3.select("#c-char-img").style("background-image", `url(${d.img || "https://img.icons8.com/color/100/user-male-circle.png"})`);
-        const houseNode = nodes.find(n => n.id === d.parent);
-        d3.select("#c-house-mini").attr("src", houseNode ? houseNode.img : "https://img.icons8.com/color/100/castle.png").style("display", "block");
+        // Find the house ancestor for the sigil
+        let current = d;
+        while (current && current.type !== 'house') {
+            current = nodes.find(n => n.id === current.parent);
+        }
+        const houseImg = current ? current.img : "https://img.icons8.com/color/100/castle.png";
+        d3.select("#c-house-mini").attr("src", houseImg).style("display", "block");
     }
 
     // Smart positioning: prefer side with more space
