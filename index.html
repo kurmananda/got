@@ -15,7 +15,8 @@
         
         body { 
             margin: 0; background: var(--bg); color: var(--gold); 
-            font-family: 'Cinzel', serif; overflow: hidden;
+            font-family: 'Cinzel', serif; font-weight: 400; overflow: hidden;
+            text-shadow: 0 0 5px rgba(255, 204, 51, 0.3);
         }
 
         #stars-far {
@@ -35,43 +36,70 @@
         .top-left { top: 30px; left: 30px; border-left: 3px solid var(--gold); padding-left: 15px; }
 
         button { 
-            background: rgba(0,0,0,0.8); border: 1px solid var(--gold); color: var(--gold);
-            padding: 12px 24px; cursor: pointer; font-family: 'Cinzel'; transition: 0.4s;
-            text-transform: uppercase; font-size: 0.8em; letter-spacing: 2px;
+            background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(20,20,20,0.9)); 
+            border: 2px solid var(--gold); color: var(--gold);
+            padding: 14px 28px; cursor: pointer; font-family: 'Cinzel'; font-weight: 600; transition: all 0.4s ease;
+            text-transform: uppercase; font-size: 0.85em; letter-spacing: 2px; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        button:hover { background: var(--gold); color: #000; box-shadow: 0 0 30px var(--glow); }
+        button:hover { 
+            background: linear-gradient(135deg, var(--gold), #ffaa00); 
+            color: #000; 
+            box-shadow: 0 0 40px var(--glow), 0 6px 20px rgba(0,0,0,0.7);
+            transform: translateY(-2px);
+        }
 
         #team-modal {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 320px; background: rgba(5,5,5,0.98); border: 1px solid var(--gold);
+            width: 340px; background: linear-gradient(135deg, rgba(5,5,5,0.98), rgba(15,15,15,0.98)); 
+            border: 2px solid var(--gold); border-radius: 15px;
             padding: 40px; display: none; z-index: 3000; text-align: center;
-            box-shadow: 0 0 100px #000, 0 0 20px var(--glow);
+            box-shadow: 0 0 120px #000, 0 0 30px var(--glow);
         }
         .team-list { 
-            font-family: 'Quicksand', sans-serif; font-size: 1.1em;
+            font-family: 'Quicksand', sans-serif; font-size: 1.1em; font-weight: 500;
             letter-spacing: 3px; line-height: 2.8; color: #fff; margin: 30px 0;
         }
 
         #stat-card {
-            position: fixed; visibility: hidden; width: 320px;
-            background: #000; border: 1px solid var(--gold);
+            position: fixed; visibility: hidden; width: 340px; border-radius: 12px;
+            background: linear-gradient(135deg, #000, #111); border: 2px solid var(--gold);
             z-index: 2000; pointer-events: none;
-            box-shadow: 0 0 50px rgba(0,0,0,1), inset 0 0 15px rgba(255,204,51,0.05);
+            box-shadow: 0 0 60px rgba(0,0,0,1), inset 0 0 20px rgba(255,204,51,0.1), 0 10px 30px rgba(0,0,0,0.8);
         }
-        .card-header { height: 200px; position: relative; border-bottom: 1px solid var(--gold); background: #080808; overflow: hidden; }
-        .char-img { position: absolute; width: 100%; height: 100%; background-size: contain; background-position: center; background-repeat: no-repeat; z-index: 1; }
-        .house-mini { position: absolute; top: 10px; right: 10px; width: 50px; height: 50px; z-index: 3; filter: drop-shadow(0 0 8px #000); }
-        .card-body { padding: 25px; background: #050505; }
-        .card-name { font-size: 1.5em; color: #fff; letter-spacing: 2px; display: block; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 8px; }
-        .card-row { font-size: 0.82em; margin-bottom: 12px; font-family: 'Quicksand', sans-serif; display: flex; }
-        .card-label { color: var(--gold); font-weight: bold; width: 100px; text-transform: uppercase; font-size: 0.65em; letter-spacing: 1.5px; flex-shrink: 0; }
-        .card-val { color: #eee; line-height: 1.4; }
+        .card-header { 
+            height: 200px; position: relative; border-bottom: 2px solid var(--gold); 
+            background: linear-gradient(135deg, #080808, #0a0a0a); overflow: hidden; border-radius: 10px 10px 0 0;
+        }
+        .char-img { 
+            position: absolute; width: 100%; height: 100%; background-size: contain; background-position: center; background-repeat: no-repeat; z-index: 1; 
+            filter: brightness(1.1) contrast(1.05);
+        }
+        .house-mini { 
+            position: absolute; top: 10px; right: 10px; width: 50px; height: 50px; z-index: 3; 
+            filter: drop-shadow(0 0 10px #000) brightness(1.2); border-radius: 50%; border: 1px solid var(--gold);
+        }
+        .card-body { 
+            padding: 30px; background: linear-gradient(135deg, #050505, #0a0a0a); border-radius: 0 0 10px 10px;
+        }
+        .card-name { 
+            font-size: 1.6em; color: #fff; letter-spacing: 2px; font-weight: 700; display: block; margin-bottom: 18px; 
+            border-bottom: 2px solid #333; padding-bottom: 10px; text-shadow: 0 0 8px rgba(255,255,255,0.3);
+        }
+        .card-row { 
+            font-size: 0.85em; margin-bottom: 14px; font-family: 'Quicksand', sans-serif; font-weight: 500; display: flex;
+        }
+        .card-label { 
+            color: var(--gold); font-weight: 700; width: 110px; text-transform: uppercase; font-size: 0.7em; letter-spacing: 1.5px; flex-shrink: 0;
+            text-shadow: 0 0 5px var(--glow);
+        }
+        .card-val { color: #eee; line-height: 1.5; text-shadow: 0 0 3px rgba(255,255,255,0.2); }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; z-index: 2900; backdrop-filter: blur(5px); }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; z-index: 2900; backdrop-filter: blur(8px); }
         
         line { 
             stroke: var(--line-dark); 
-            stroke-width: 1.5px; 
+            stroke-width: 5px; 
             opacity: 0.8; 
             transition: stroke 0.3s;
         }
@@ -83,11 +111,12 @@
 <div id="stars-near"></div>
 
 <div class="ui-panel top-left">
-    <h1 style="margin:0; font-size: 1.3em; letter-spacing: 5px;">GRAND LINEAGE</h1>
+    <h1 style="margin:0; font-size: 1.3em; letter-spacing: 5px;">GAME OF THRONES</h1>
+    <h1 style="margin:0; font-size: 0.8em; letter-spacing: 5px;">PRESS RESET MULTIPLE TIMES, IF IT GETS MESSY</h1>
 </div>
 
 <div class="ui-panel top-right">
-    <button onclick="resetView()">Recenter</button>
+    <button onclick="resetView()">Reset</button>
     <button onclick="toggleTeam()">Project Team</button>
 </div>
 
@@ -279,6 +308,7 @@ const node = g.append("g").selectAll("g").data(nodes).join("g")
         .on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
         .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
         .on("end", (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }))
+    .on("click", (e, d) => { if(d.id === 'IT') { simulation.alpha(1).restart(); } })
     .on("mouseenter", showCard).on("mouseleave", hideCard);
 
 node.append("circle").attr("r", d=>d.size/2).attr("fill", "#000").attr("stroke", "var(--gold)").attr("stroke-width", 2);
@@ -314,6 +344,7 @@ function showCard(e, d) {
         d3.select("#h-motto").text(d.motto || "Family, Duty, Honor");
         d3.select("#h-seat").text(d.seat || "Various");
         d3.select("#c-char-img").style("background-image", `url(${d.img})`);
+        d3.select("#c-house-mini").style("display", "none");
     } else {
         d3.select("#p-content").style("display", "block");
         d3.select("#h-content").style("display", "none");
@@ -322,23 +353,40 @@ function showCard(e, d) {
         d3.select("#c-weak").text(d.weak || "Mortal");
         d3.select("#c-death").text(d.death || "Dead").style("color", d.death === 'Alive' ? '#00ffaa' : '#ff4444');
         d3.select("#c-char-img").style("background-image", `url(${d.img || "https://img.icons8.com/color/100/user-male-circle.png"})`);
+        const houseNode = nodes.find(n => n.id === d.parent);
+        d3.select("#c-house-mini").attr("src", houseNode ? houseNode.img : "https://img.icons8.com/color/100/castle.png").style("display", "block");
     }
 
-    // Position the card with boundary checks
-    let x = e.pageX + 20;
-    let y = e.pageY + 20;
+    // Smart positioning: prefer side with more space
     const cardWidth = 320;
-    const cardHeight = 420;
+    const cardHeight = 350;
     const margin = 10;
 
-    if (x + cardWidth > window.innerWidth) {
-        x = window.innerWidth - cardWidth - margin;
+    let x, y;
+
+    // Horizontal positioning
+    if (e.pageX > window.innerWidth / 2) {
+        // More space on left, position left of cursor
+        x = e.pageX - cardWidth - 20;
+    } else {
+        // More space on right, position right of cursor
+        x = e.pageX + 20;
     }
-    if (y + cardHeight > window.innerHeight) {
-        y = window.innerHeight - cardHeight - margin;
+
+    // Vertical positioning
+    if (e.pageY > window.innerHeight / 2) {
+        // More space above, position above cursor
+        y = e.pageY - cardHeight - 20;
+    } else {
+        // More space below, position below cursor
+        y = e.pageY + 20;
     }
+
+    // Clamp to viewport bounds
     if (x < margin) x = margin;
     if (y < margin) y = margin;
+    if (x + cardWidth > window.innerWidth) x = window.innerWidth - cardWidth - margin;
+    if (y + cardHeight > window.innerHeight) y = window.innerHeight - cardHeight - margin;
 
     card.style("left", x + "px").style("top", y + "px").style("visibility", "visible");
 }
@@ -349,7 +397,10 @@ function toggleTeam() {
     d3.select("#team-modal").style("display", isVis ? "none" : "block");
     d3.select("#overlay").style("display", isVis ? "none" : "block");
 }
-function resetView() { svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.scale(0.5)); }
+function resetView() { 
+    svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.scale(0.5));
+    simulation.alpha(1).restart();
+}
 </script>
 </body>
 </html>
