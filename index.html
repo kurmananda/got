@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Westeros: Obsidian Dynasty</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Quicksand:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --gold: #ffcc33; 
+            --glow: rgba(255, 204, 51, 0.4); 
+            --bg: #020202; 
+            --line-dark: #2a220a; /* Darker, sophisticated line color */
+        }
+        
+        body { 
+            margin: 0; background: var(--bg); color: var(--gold); 
+            font-family: 'Cinzel', serif; overflow: hidden;
+        }
+
+        #stars-far {
+            position: fixed; inset: -10%; width: 120%; height: 120%;
+            background-image: radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)),
+                              radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0));
+            background-size: 200px 200px; opacity: 0.3; z-index: -2;
+        }
+        #stars-near {
+            position: fixed; inset: -20%; width: 140%; height: 140%;
+            background-image: radial-gradient(2px 2px at 50px 160px, var(--gold), rgba(0,0,0,0));
+            background-size: 400px 400px; opacity: 0.15; z-index: -1;
+        }
+
+        .ui-panel { position: absolute; z-index: 100; }
+        .top-right { top: 30px; right: 30px; display: flex; gap: 15px; }
+        .top-left { top: 30px; left: 30px; border-left: 3px solid var(--gold); padding-left: 15px; }
+
+        button { 
+            background: rgba(0,0,0,0.8); border: 1px solid var(--gold); color: var(--gold);
+            padding: 12px 24px; cursor: pointer; font-family: 'Cinzel'; transition: 0.4s;
+            text-transform: uppercase; font-size: 0.8em; letter-spacing: 2px;
+        }
+        button:hover { background: var(--gold); color: #000; box-shadow: 0 0 30px var(--glow); }
+
+        #team-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 320px; background: rgba(5,5,5,0.98); border: 1px solid var(--gold);
+            padding: 40px; display: none; z-index: 3000; text-align: center;
+            box-shadow: 0 0 100px #000, 0 0 20px var(--glow);
+        }
+        .team-list { 
+            font-family: 'Quicksand', sans-serif; font-size: 1.1em;
+            letter-spacing: 3px; line-height: 2.8; color: #fff; margin: 30px 0;
+        }
+
+        #stat-card {
+            position: fixed; visibility: hidden; width: 320px;
+            background: #000; border: 1px solid var(--gold);
+            z-index: 2000; pointer-events: none;
+            box-shadow: 0 0 50px rgba(0,0,0,1), inset 0 0 15px rgba(255,204,51,0.05);
+        }
+        .card-header { height: 200px; position: relative; border-bottom: 1px solid var(--gold); background: #080808; overflow: hidden; }
+        .char-img { position: absolute; width: 100%; height: 100%; background-size: contain; background-position: center; background-repeat: no-repeat; z-index: 1; }
+        .house-mini { position: absolute; top: 10px; right: 10px; width: 50px; height: 50px; z-index: 3; filter: drop-shadow(0 0 8px #000); }
+        .card-body { padding: 25px; background: #050505; }
+        .card-name { font-size: 1.5em; color: #fff; letter-spacing: 2px; display: block; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 8px; }
+        .card-row { font-size: 0.82em; margin-bottom: 12px; font-family: 'Quicksand', sans-serif; display: flex; }
+        .card-label { color: var(--gold); font-weight: bold; width: 100px; text-transform: uppercase; font-size: 0.65em; letter-spacing: 1.5px; flex-shrink: 0; }
+        .card-val { color: #eee; line-height: 1.4; }
+
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; z-index: 2900; backdrop-filter: blur(5px); }
+        
+        line { 
+            stroke: var(--line-dark); 
+            stroke-width: 1.5px; 
+            opacity: 0.8; 
+            transition: stroke 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<div id="stars-far"></div>
+<div id="stars-near"></div>
+
+<div class="ui-panel top-left">
+    <h1 style="margin:0; font-size: 1.3em; letter-spacing: 5px;">GRAND LINEAGE</h1>
+</div>
+
+<div class="ui-panel top-right">
+    <button onclick="resetView()">Recenter</button>
+    <button onclick="toggleTeam()">Project Team</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleTeam()"></div>
+<div id="team-modal">
+    <h2 style="letter-spacing: 4px; color: var(--gold); font-size: 1.2em;">PROJECT TEAM</h2>
+    <div style="width: 60px; height: 1px; background: var(--gold); margin: 15px auto;"></div>
+    <div class="team-list">
+        ALI MURABBI<br>BHAVY SAVANI<br>TRINATH REDDY<br>VENKATA KRISHNAN<br>ARYAMAN SWAMY<br>KURMANANDA
+    </div>
+    <button onclick="toggleTeam()">Return</button>
+</div>
+
+<div id="stat-card">
+    <div class="card-header">
+        <div id="c-char-img" class="char-img"></div>
+        <img id="c-house-mini" class="house-mini" src="" alt="">
+    </div>
+    <div class="card-body">
+        <span class="card-name" id="c-name"></span>
+        <div id="p-content">
+            <div class="card-row"><span class="card-label">Spouse</span><span class="card-val" id="c-spouse"></span></div>
+            <div class="card-row"><span class="card-label">Strengths</span><span class="card-val" id="c-str"></span></div>
+            <div class="card-row"><span class="card-label">Weakness</span><span class="card-val" id="c-weak"></span></div>
+            <div class="card-row"><span class="card-label">Status</span><span class="card-val" id="c-death"></span></div>
+        </div>
+        <div id="h-content" style="display:none">
+            <div class="card-row"><span class="card-label">Motto</span><i class="card-val" id="h-motto" style="color:#fff"></i></div>
+            <div class="card-row"><span class="card-label">Seat</span><span class="card-val" id="h-seat"></span></div>
+        </div>
+    </div>
+</div>
+
+<div id="viz"></div>
+
+<script>
+const width = window.innerWidth, height = window.innerHeight;
+
+const data = {
+  "nodes": [
+    { "id": "IT", "name": "Iron Throne", "type": "center", "size": 100, "img": "https://img.icons8.com/color/100/iron-throne.png" },
+
+    /* --- HOUSE TARGARYEN (Extended from Aegon I) --- */
+    { "id": "TARG", "name": "House Targaryen", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/dragon.png" },
+    { "id": "aegon_i", "name": "Aegon I", "parent": "TARG", "size": 75, "str": "Conquest", "weak": "Dorne", "death": "Dead" , "img": "https://img.icons8.com/color/100/dragon.png", spouse: "Visenya & Rhaenys" },
+    { "id": "aenys_i", "name": "Aenys I", "parent": "aegon_i", "size": 70, "str": "Diplomacy", "weak": "Indecision", "death": "Dead" },
+    { "id": "maegor_i", "name": "Maegor I", "parent": "aegon_i", "size": 70, "str": "Terror", "weak": "Cruelty", "death": "Dead" },
+    { "id": "jaehaerys_i", "name": "Jaehaerys I", "parent": "aenys_i", "size": 70, "str": "Law", "weak": "Succession", "death": "Dead" },
+    { "id": "alysanne_t", "name": "Alysanne", "parent": "aenys_i", "size": 65, "str": "Charity", "weak": "Grief", "death": "Dead" },
+    { "id": "aemon_t1", "name": "Aemon", "parent": "jaehaerys_i", "size": 60, "str": "Duty", "weak": "Crossbows", "death": "Dead" },
+    { "id": "baelon_t", "name": "Baelon", "parent": "jaehaerys_i", "size": 60, "str": "Bravery", "weak": "Health", "death": "Dead" },
+    { "id": "viserys_i", "name": "Viserys I", "parent": "baelon_t", "size": 65, "str": "Feasts", "weak": "Passivity", "death": "Dead" },
+    { "id": "daemon_t", "name": "Daemon", "parent": "baelon_t", "size": 65, "str": "Combat", "weak": "Temper", "death": "Dead" },
+    { "id": "rhaenyra", "name": "Rhaenyra", "parent": "viserys_i", "size": 65, "str": "Tenacity", "weak": "Paranoia", "death": "Dead" },
+    { "id": "aegon_ii", "name": "Aegon II", "parent": "viserys_i", "size": 60, "str": "Will", "weak": "Lust", "death": "Dead" },
+    { "id": "helaena_t", "name": "Helaena", "parent": "viserys_i", "size": 60, "str": "Prophecy", "weak": "Depression", "death": "Dead" },
+    { "id": "aemond_t", "name": "Aemond", "parent": "viserys_i", "size": 60, "str": "Vhagar", "weak": "Eye", "death": "Dead" },
+    { "id": "daeron_t_son", "name": "Daeron the Daring", "parent": "viserys_i", "size": 55, "str": "Kindness", "weak": "Small", "death": "Dead" },
+    { "id": "jacaerys_v", "name": "Jacaerys Velaryon", "parent": "rhaenyra", "size": 60, "str": "Diplomacy", "weak": "Origin", "death": "Dead" },
+    { "id": "lucerys_v", "name": "Lucerys Velaryon", "parent": "rhaenyra", "size": 60, "str": "Obedience", "weak": "Arrogance", "death": "Dead" },
+    { "id": "joffrey_v", "name": "Joffrey Velaryon", "parent": "rhaenyra", "size": 55, "str": "Bravery", "weak": "Storm", "death": "Dead" },
+    { "id": "aegon_iii", "name": "Aegon III", "parent": "rhaenyra", "size": 65, "str": "Governance", "weak": "Sadness", "death": "Dead" },
+    { "id": "viserys_ii", "name": "Viserys II", "parent": "rhaenyra", "size": 65, "str": "Wisdom", "weak": "Health", "death": "Dead" },
+    { "id": "aegon_iv", "name": "Aegon IV", "parent": "viserys_ii", "size": 70, "str": "None", "weak": "Greed", "death": "Dead" },
+    { "id": "daeron_ii", "name": "Daeron II", "parent": "aegon_iv", "size": 65, "str": "Unity", "weak": "Physique", "death": "Dead" },
+    { "id": "daemon_bf", "name": "Daemon Blackfyre", "parent": "aegon_iv", "size": 65, "str": "Martial", "weak": "Legitimacy", "death": "Dead" },
+    { "id": "brynden_rivers", "name": "Brynden Rivers", "parent": "aegon_iv", "size": 65, "str": "Sorcery", "weak": "Loyalty", "death": "Dead" },
+    { "id": "shiera_seastar", "name": "Shiera Seastar", "parent": "aegon_iv", "size": 60, "str": "Beauty", "weak": "Mystery", "death": "Dead" },
+    { "id": "baelor_break", "name": "Baelor Breakspear", "parent": "daeron_ii", "size": 60, "str": "Honor", "weak": "Fragility", "death": "Dead" },
+    { "id": "maekar_i", "name": "Maekar I", "parent": "daeron_ii", "size": 60, "str": "Strength", "weak": "Solitude", "death": "Dead" },
+    { "id": "aemon_maester", "name": "Maester Aemon", "parent": "maekar_i", "size": 65, "str": "Knowledge", "weak": "Vows", "death": "Dead" },
+    { "id": "aegon_v", "name": "Aegon V", "parent": "maekar_i", "size": 70, "str": "Reform", "weak": "Summerhall", "death": "Dead" },
+    { "id": "duncan_small", "name": "Prince Duncan", "parent": "aegon_v", "size": 60, "str": "Love", "weak": "Jenny", "death": "Dead" },
+    { "id": "jaehaerys_ii", "name": "Jaehaerys II", "parent": "aegon_v", "size": 65, "str": "Thought", "weak": "Sickly", "death": "Dead" },
+    { "id": "aerys_ii", "name": "Aerys II", "parent": "jaehaerys_ii", "size": 75, "str": "Lineage", "weak": "Madness", "death": "Dead" },
+    { "id": "rhaegar", "name": "Rhaegar", "parent": "aerys_ii", "size": 70, "str": "Charisma", "weak": "Obsession", "death": "Dead" },
+    { "id": "viserys_t", "name": "Viserys T", "parent": "aerys_ii", "size": 60, "str": "Persistence", "weak": "Pride", "death": "Dead" },
+    { "id": "dany", "name": "Daenerys", "parent": "aerys_ii", "size": 70, "str": "Dragons", "weak": "Mercy", "death": "Dead" },
+    { "id": "jon_s", "name": "Jon Snow", "parent": "rhaegar", "size": 65, "str": "Blade", "weak": "Honor", "death": "Alive" },
+
+    /* --- HOUSE BARATHEON --- */
+    { "id": "BARA", "name": "House Baratheon", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/deer.png" },
+    { "id": "orys_b", "name": "Orys", "parent": "BARA", "size": 75, "str": "Command", "weak": "Origin", "death": "Dead" },
+    { "id": "steffon_b", "name": "Steffon", "parent": "BARA", "size": 70, "str": "Stability", "weak": "Storms", "death": "Dead" },
+    { "id": "robert", "name": "Robert", "parent": "steffon_b", "size": 75, "str": "Warfare", "weak": "Excess", "death": "Dead" },
+    { "id": "stannis", "name": "Stannis", "parent": "steffon_b", "size": 70, "str": "Discipline", "weak": "Rigidity", "death": "Dead" },
+    { "id": "renly", "name": "Renly", "parent": "steffon_b", "size": 70, "str": "Charm", "weak": "Hubris", "death": "Dead" },
+    { "id": "joffrey", "name": "Joffrey", "parent": "robert", "size": 60, "str": "Power", "weak": "Cruelty", "death": "Dead" },
+    { "id": "myrcella", "name": "Myrcella", "parent": "robert", "size": 60, "str": "Grace", "weak": "Dorne", "death": "Dead" },
+    { "id": "tommen", "name": "Tommen", "parent": "robert", "size": 60, "str": "Kindness", "weak": "Youth", "death": "Dead" },
+    { "id": "gendry", "name": "Gendry", "parent": "robert", "size": 55, "str": "Strength", "weak": "Birth", "death": "Alive" },
+    { "id": "shireen", "name": "Shireen", "parent": "stannis", "size": 50, "str": "Learning", "weak": "Greyscale", "death": "Dead" },
+    { "id": "edric_storm", "name": "Edric Storm", "parent": "robert", "size": 50, "str": "Lineage", "weak": "Bastardy", "death": "Alive" },
+    { "id": "mya_stone", "name": "Mya Stone", "parent": "robert", "size": 50, "str": "Hiking", "weak": "Fear", "death": "Alive" },
+
+    /* --- HOUSE STARK --- */
+    { "id": "STARK", "name": "House Stark", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/wolf.png" },
+    { "id": "rickard_s", "name": "Rickard", "parent": "STARK", "size": 75, "str": "Ambition", "weak": "Fire", "death": "Dead" },
+    { "id": "brandon_s", "name": "Brandon", "parent": "rickard_s", "size": 65, "str": "Sword", "weak": "Temper", "death": "Dead" },
+    { "id": "ned", "name": "Ned", "parent": "rickard_s", "size": 70, "str": "Loyalty", "weak": "Trust", "death": "Dead" },
+    { "id": "lyanna_s", "name": "Lyanna", "parent": "rickard_s", "size": 65, "str": "Will", "weak": "Fate", "death": "Dead" },
+    { "id": "benjen", "name": "Benjen", "parent": "rickard_s", "size": 60, "str": "Stealth", "weak": "Vows", "death": "Dead" },
+    { "id": "robb", "name": "Robb", "parent": "ned", "size": 60, "str": "Strategy", "weak": "Oaths", "death": "Dead" },
+    { "id": "sansa", "name": "Sansa", "parent": "ned", "size": 60, "str": "Survival", "weak": "Naivety", "death": "Alive" },
+    { "id": "arya", "name": "Arya", "parent": "ned", "size": 60, "str": "Assassination", "weak": "Vendetta", "death": "Alive" },
+    { "id": "bran", "name": "Bran", "parent": "ned", "size": 60, "str": "Magic", "weak": "Body", "death": "Alive" },
+    { "id": "rickon", "name": "Rickon", "parent": "ned", "size": 55, "str": "Wild", "weak": "Age", "death": "Dead" },
+
+    /* --- HOUSE LANNISTER --- */
+    { "id": "LANN", "name": "House Lannister", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/lion.png" },
+    { "id": "tytos_l", "name": "Tytos", "parent": "LANN", "size": 70, "str": "Friendship", "weak": "Weakness", "death": "Dead" },
+    { "id": "tywin", "name": "Tywin", "parent": "tytos_l", "size": 75, "str": "Governance", "weak": "Family", "death": "Dead" },
+    { "id": "kevan", "name": "Kevan", "parent": "tytos_l", "size": 65, "str": "Duty", "weak": "Tywin", "death": "Dead" },
+    { "id": "tygett", "name": "Tygett", "parent": "tytos_l", "size": 60, "str": "Martial", "weak": "Shadow", "death": "Dead" },
+    { "id": "gerion", "name": "Gerion", "parent": "tytos_l", "size": 60, "str": "Wit", "weak": "Lost", "death": "Dead" },
+    { "id": "jaime", "name": "Jaime", "parent": "tywin", "size": 65, "str": "Reflexes", "weak": "Cersei", "death": "Dead" },
+    { "id": "cersei", "name": "Cersei", "parent": "tywin", "size": 65, "str": "Motherhood", "weak": "Paranoia", "death": "Dead" },
+    { "id": "tyrion", "name": "Tyrion", "parent": "tywin", "size": 65, "str": "Logic", "weak": "Vices", "death": "Alive" },
+    { "id": "lancel", "name": "Lancel", "parent": "kevan", "size": 55, "str": "Faith", "weak": "Regret", "death": "Dead" },
+
+    /* HOUSE TYRELL (Olenna -> Mace -> 4 kids) */
+    { "id": "TYRE", "name": "House Tyrell", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/rose.png" },
+    { "id": "olenna", "name": "Olenna", "parent": "TYRE", "size": 75, "str": "Wit", "weak": "Age", "death": "Dead" },
+    { "id": "mace_t", "name": "Mace", "parent": "olenna", "size": 65, "str": "Wealth", "weak": "Bluster", "death": "Dead" },
+    { "id": "willas", "name": "Willas", "parent": "mace_t", "size": 60, "str": "Knowledge", "weak": "Leg", "death": "Alive" },
+    { "id": "garlan", "name": "Garlan", "parent": "mace_t", "size": 60, "str": "Honor", "weak": "Selfless", "death": "Alive" },
+    { "id": "loras", "name": "Loras", "parent": "mace_t", "size": 60, "str": "Speed", "weak": "Passion", "death": "Dead" },
+    { "id": "margaery", "name": "Margaery", "parent": "mace_t", "size": 65, "str": "Charity", "weak": "Game", "death": "Dead" },
+
+    /* HOUSE MARTELL (Doran/Oberyn and 8 Sand Snakes) */
+    { "id": "MART", "name": "House Martell", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/sun.png" },
+    { "id": "doran", "name": "Doran", "parent": "MART", "size": 70, "str": "Caution", "weak": "Gout", "death": "Dead" },
+    { "id": "oberyn", "name": "Oberyn", "parent": "MART", "size": 70, "str": "Poisons", "weak": "Vengeance", "death": "Dead" },
+    { "id": "arianne", "name": "Arianne", "parent": "doran", "size": 60, "str": "Seduction", "weak": "Rash", "death": "Alive" },
+    { "id": "trystane", "name": "Trystane", "parent": "doran", "size": 55, "str": "Kindness", "weak": "Innocence", "death": "Dead" },
+    { "id": "obara", "name": "Obara", "parent": "oberyn", "size": 55, "str": "Spear", "weak": "Stiff", "death": "Dead" },
+    { "id": "nymeria_s", "name": "Nymeria", "parent": "oberyn", "size": 55, "str": "Dagger", "weak": "Arrogance", "death": "Dead" },
+    { "id": "tyene", "name": "Tyene", "parent": "oberyn", "size": 55, "str": "Herbology", "weak": "Faith", "death": "Dead" },
+
+    /* HOUSE GREYJOY (Quellon to Balon's line) */
+    { "id": "GREY", "name": "House Greyjoy", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/squid.png" },
+    { "id": "quellon", "name": "Quellon", "parent": "GREY", "size": 70, "str": "Reform", "weak": "Death", "death": "Dead" },
+    { "id": "balon", "name": "Balon", "parent": "quellon", "size": 65, "str": "Rigidity", "weak": "Old Ways", "death": "Dead" },
+    { "id": "euron", "name": "Euron", "parent": "quellon", "size": 65, "str": "Fear", "weak": "Chaos", "death": "Dead" },
+    { "id": "theon", "name": "Theon", "parent": "balon", "size": 60, "str": "Archery", "weak": "Identity", "death": "Dead" },
+    { "id": "yara", "name": "Yara", "parent": "balon", "size": 60, "str": "Sailing", "weak": "Love", "death": "Alive" },
+
+    /* HOUSE TULLY */
+    { "id": "TULL", "name": "House Tully", "parent": "IT", "type": "house", "size": 85, "img": "https://img.icons8.com/color/100/fish.png" },
+    { "id": "hoster", "name": "Hoster", "parent": "TULL", "size": 70, "str": "Protocol", "weak": "Regrets", "death": "Dead" },
+    { "id": "catelyn", "name": "Catelyn", "parent": "hoster", "size": 65, "str": "Duty", "weak": "Family", "death": "Dead" },
+    { "id": "edmure", "name": "Edmure", "parent": "hoster", "size": 60, "str": "People", "weak": "Folly", "death": "Alive" },
+    { "id": "brynden_black", "name": "Brynden Tully", "parent": "TULL", "size": 65, "str": "Tactics", "weak": "Stubborn", "death": "Dead" }
+  ]
+};
+
+const nodes = data.nodes;
+const links = nodes.filter(d => d.parent).map(d => ({ source: d.parent, target: d.id }));
+
+// 1. Pre-randomize positions to prevent overlap at spawn
+nodes.forEach(d => {
+    d.x = (Math.random() - 0.5) * width;
+    d.y = (Math.random() - 0.5) * height;
+});
+
+const zoom = d3.zoom().scaleExtent([0.1, 3]).on("zoom", e => {
+    g.attr("transform", e.transform);
+    d3.select("#stars-far").style("transform", `translate(${e.transform.x * 0.05}px, ${e.transform.y * 0.05}px)`);
+    d3.select("#stars-near").style("transform", `translate(${e.transform.x * 0.1}px, ${e.transform.y * 0.1}px)`);
+});
+
+const svg = d3.select("#viz").append("svg").attr("viewBox", [-width/2, -height/2, width, height]).call(zoom);
+const g = svg.append("g");
+
+// 2. Strong physics to prevent intersections
+const simulation = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(links).id(d => d.id)
+        .distance(d => d.source.type === 'center' ? 300 : 150)
+        .strength(1))
+    .force("charge", d3.forceManyBody().strength(-4000)) 
+    .force("collide", d3.forceCollide().radius(d => d.size + 40).iterations(3)) // High collision radius keeps lines clear
+    .force("x", d3.forceX(0).strength(0.05))
+    .force("y", d3.forceY(0).strength(0.05));
+
+const link = g.append("g").selectAll("line").data(links).join("line");
+
+const node = g.append("g").selectAll("g").data(nodes).join("g")
+    .call(d3.drag()
+        .on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+        .on("end", (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }))
+    .on("mouseenter", showCard).on("mouseleave", hideCard);
+
+node.append("circle").attr("r", d=>d.size/2).attr("fill", "#000").attr("stroke", "var(--gold)").attr("stroke-width", 2);
+
+node.append("clipPath").attr("id", d=>"clip-"+d.id).append("circle").attr("r", d=>d.size/2);
+
+node.append("image")
+    .attr("xlink:href", d => d.img || "https://img.icons8.com/color/100/user-male-circle.png")
+    .attr("clip-path", d => `url(#clip-${d.id})`)
+    .attr("x", d => -d.size/2).attr("y", d => -d.size/2)
+    .attr("width", d => d.size).attr("height", d => d.size)
+    .attr("preserveAspectRatio", "xMidYMid slice");
+
+simulation.on("tick", () => {
+    // Keep IT at the absolute center
+    const it = nodes.find(n => n.id === "IT");
+    if(it) { it.x = 0; it.y = 0; }
+
+    link.attr("x1", d=>d.source.x).attr("y1", d=>d.source.y).attr("x2", d=>d.target.x).attr("y2", d=>d.target.y);
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+});
+
+svg.call(zoom.transform, d3.zoomIdentity.scale(0.5));
+
+function showCard(e, d) {
+    if(d.id === 'IT') return;
+    const card = d3.select("#stat-card");
+    d3.select("#c-name").text(d.name);
+    
+    if(d.type === 'house') {
+        d3.select("#p-content").style("display", "none");
+        d3.select("#h-content").style("display", "block");
+        d3.select("#h-motto").text(d.motto || "Family, Duty, Honor");
+        d3.select("#h-seat").text(d.seat || "Various");
+        d3.select("#c-char-img").style("background-image", `url(${d.img})`);
+    } else {
+        d3.select("#p-content").style("display", "block");
+        d3.select("#h-content").style("display", "none");
+        d3.select("#c-spouse").text(d.spouse || "N/A");
+        d3.select("#c-str").text(d.str || "Lineage");
+        d3.select("#c-weak").text(d.weak || "Mortal");
+        d3.select("#c-death").text(d.death || "Dead").style("color", d.death === 'Alive' ? '#00ffaa' : '#ff4444');
+        d3.select("#c-char-img").style("background-image", `url(${d.img || "https://img.icons8.com/color/100/user-male-circle.png"})`);
+    }
+
+    // Position the card with boundary checks
+    let x = e.pageX + 20;
+    let y = e.pageY + 20;
+    const cardWidth = 320;
+    const cardHeight = 420;
+    const margin = 10;
+
+    if (x + cardWidth > window.innerWidth) {
+        x = window.innerWidth - cardWidth - margin;
+    }
+    if (y + cardHeight > window.innerHeight) {
+        y = window.innerHeight - cardHeight - margin;
+    }
+    if (x < margin) x = margin;
+    if (y < margin) y = margin;
+
+    card.style("left", x + "px").style("top", y + "px").style("visibility", "visible");
+}
+
+function hideCard() { d3.select("#stat-card").style("visibility", "hidden"); }
+function toggleTeam() {
+    const isVis = d3.select("#team-modal").style("display") === "block";
+    d3.select("#team-modal").style("display", isVis ? "none" : "block");
+    d3.select("#overlay").style("display", isVis ? "none" : "block");
+}
+function resetView() { svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.scale(0.5)); }
+</script>
+</body>
+</html>
