@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Westeros: Obsidian Dynasty</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Quicksand:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --gold: #ff6633; 
+            --glow: rgba(255, 102, 51, 0.4); 
+            --bg: #020202; 
+            --line-dark: #3a1a0a;
+        }
+        
+        body { 
+            margin: 0; 
+            background: var(--bg);
+            color: var(--gold); 
+            font-family: 'Cinzel', serif; 
+            font-weight: 400; 
+            overflow: hidden;
+            text-shadow: 0 0 5px rgba(255, 204, 51, 0.3);
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: url('https://wallpapercave.com/wp/wp13023970.jpg') no-repeat center center;
+            background-size: cover;
+            opacity: 0.5;
+            z-index: -3;
+        }
+        #stars-far {
+            position: fixed; inset: -10%; width: 120%; height: 120%;
+            background-image: radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)),
+                              radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0));
+            background-size: 200px 200px; opacity: 0.3; z-index: -2;
+        }
+        #stars-near {
+            position: fixed; inset: -20%; width: 140%; height: 140%;
+            background-image: radial-gradient(2px 2px at 50px 160px, var(--gold), rgba(0,0,0,0));
+            background-size: 400px 400px; opacity: 0.15; z-index: -1;
+        }
+
+        .ui-panel { position: absolute; z-index: 100; }
+        .top-right { top: 30px; right: 30px; display: flex; gap: 15px; }
+        .top-left { top: 30px; left: 30px; border-left: 3px solid var(--gold); padding-left: 15px; }
+
+        button { 
+            background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(20,20,20,0.9)); 
+            border: 2px solid var(--gold); color: var(--gold);
+            padding: 14px 28px; cursor: pointer; font-family: 'Cinzel'; font-weight: 600; transition: all 0.4s ease;
+            text-transform: uppercase; font-size: 0.85em; letter-spacing: 2px; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        button:hover { 
+            background: linear-gradient(135deg, var(--gold), #ffaa00); 
+            color: #000; 
+            box-shadow: 0 0 40px var(--glow), 0 6px 20px rgba(0,0,0,0.7);
+            transform: translateY(-2px);
+        }
+
+        #team-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 340px; background: linear-gradient(135deg, rgba(5,5,5,0.98), rgba(15,15,15,0.98)); 
+            border: 2px solid var(--gold); border-radius: 15px;
+            padding: 40px; display: none; z-index: 3000; text-align: center;
+            box-shadow: 0 0 120px #000, 0 0 30px var(--glow);
+        }
+        .team-list { 
+            font-family: 'Quicksand', sans-serif; font-size: 1.1em; font-weight: 500;
+            letter-spacing: 3px; line-height: 2.8; color: #fff; margin: 30px 0;
+        }
+
+        #stat-card {
+            position: fixed; visibility: hidden; width: 340px; border-radius: 12px;
+            background: linear-gradient(135deg, #000, #111); border: 2px solid var(--gold);
+            z-index: 2000; pointer-events: none;
+            box-shadow: 0 0 60px rgba(0,0,0,1), inset 0 0 20px rgba(255,204,51,0.1), 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .card-header { 
+            height: 200px; position: relative; border-bottom: 2px solid var(--gold); 
+            background: linear-gradient(135deg, #080808, #0a0a0a); overflow: hidden; border-radius: 10px 10px 0 0;
+        }
+        .char-img { 
+            position: absolute; width: 100%; height: 100%; background-size: contain; background-position: center; background-repeat: no-repeat; z-index: 1; 
+            filter: brightness(1.1) contrast(1.05);
+        }
+        .house-mini { 
+            position: absolute; top: 10px; right: 10px; width: 50px; height: 50px; z-index: 3; 
+            filter: drop-shadow(0 0 10px #000) brightness(1.2); border-radius: 50%; border: 1px solid var(--gold);
+        }
+        .card-body { 
+            padding: 30px; background: linear-gradient(135deg, #050505, #0a0a0a); border-radius: 0 0 10px 10px;
+        }
+        .card-name { 
+            font-size: 1.6em; color: #fff; letter-spacing: 2px; font-weight: 700; display: block; margin-bottom: 18px; 
+            border-bottom: 2px solid #333; padding-bottom: 10px; text-shadow: 0 0 8px rgba(255,255,255,0.3);
+        }
+        .card-row { 
+            font-size: 0.85em; margin-bottom: 14px; font-family: 'Quicksand', sans-serif; font-weight: 500; display: flex;
+        }
+        .card-label { 
+            color: var(--gold); font-weight: 700; width: 110px; text-transform: uppercase; font-size: 0.7em; letter-spacing: 1.5px; flex-shrink: 0;
+            text-shadow: 0 0 5px var(--glow);
+        }
+        .card-val { color: #eee; line-height: 1.5; text-shadow: 0 0 3px rgba(255,255,255,0.2); }
+        .card-desc {
+            font-family: 'Quicksand', sans-serif; font-size: 0.85em; line-height: 1.6;
+            color: #ccc; margin-top: 18px; padding-top: 15px; border-top: 1px dashed #444; font-style: italic;
+        }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; z-index: 2900; backdrop-filter: blur(8px); }
+
+        /* REDUCED LINE WIDTHS AS REQUESTED */
+        .link-blood { 
+            stroke: var(--line-dark); stroke-width: 6px; opacity: 0.8; transition: opacity 0.4s ease;
+        }
+        .link-marriage { 
+            stroke: #ff3366; stroke-width: 7px; stroke-dasharray: 8, 5; opacity: 0.7; transition: opacity 0.4s ease;
+        }
+        
+        /* NEW CLASSES FOR THE FOCUS / FILTER MODE */
+        .node-faded {
+            opacity: 0.15;
+            filter: grayscale(100%);
+            pointer-events: none;
+            transition: all 0.4s ease;
+        }
+        .link-faded {
+            opacity: 0.05;
+            transition: all 0.4s ease;
+        }
+    </style>
+</head>
+<body>
+
+<div id="stars-far"></div>
+<div id="stars-near"></div>
+
+<div class="ui-panel top-left">
+    <h1 style="margin:0; font-size: 1.3em; letter-spacing: 5px;">GAME OF THRONES</h1>
+    <h1 style="margin:0; font-size: 0.8em; letter-spacing: 5px;">PRESS RESET MULTIPLE TIMES, IF IT GETS MESSY</h1>
+</div>
+
+<div class="ui-panel top-right">
+    <button onclick="resetView()">Reset</button>
+    <button onclick="toggleTeam()">Project Team</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleTeam()"></div>
+<div id="team-modal">
+    <h2 style="letter-spacing: 4px; color: var(--gold); font-size: 1.2em;">PROJECT TEAM</h2>
+    <div style="width: 60px; height: 1px; background: var(--gold); margin: 15px auto;"></div>
+    <div class="team-list">
+        ALI MURABBI<br>BHAVY SAVANI<br>TRINATH REDDY<br>VENKATA KRISHNAN<br>ARYAMAN SWAMI
+    </div>
+    <button onclick="toggleTeam()">Return</button>
+</div>
+
+<div id="stat-card">
+    <div class="card-header">
+        <div id="c-char-img" class="char-img"></div>
+        <img id="c-house-mini" class="house-mini" src="" alt="">
+    </div>
+    <div class="card-body">
+        <span class="card-name" id="c-name"></span>
+        <div id="p-content" style="display: none;">
+            <div class="card-row"><span class="card-label">Spouse</span><span class="card-val" id="c-spouse"></span></div>
+            <div class="card-row"><span class="card-label">Strengths</span><span class="card-val" id="c-str"></span></div>
+            <div class="card-row"><span class="card-label">Weakness</span><span class="card-val" id="c-weak"></span></div>
+            <div class="card-row"><span class="card-label">Status</span><span class="card-val" id="c-death"></span></div>
+            <div class="card-desc" id="c-desc"></div>
+        </div>
+        <div id="h-content" style="display: block;">
+            <div class="card-row"><span class="card-label">Motto</span><i class="card-val" id="h-motto" style="color:#fff"></i></div>
+            <div class="card-row"><span class="card-label">Seat</span><span class="card-val" id="h-seat"></span></div>
+            <div class="card-desc" id="h-desc"></div>
+        </div>
+    </div>
+</div>
+
+<div id="viz"></div>
+
+<script>
+const width = window.innerWidth, height = window.innerHeight;
+
+const data = {
+  "nodes": [
+    { "id": "IT", "name": "Iron Throne", "type": "center", "size": 200, "img": "https://imgs.search.brave.com/9jYwBHzozSi00g1RB7266osRzu8aUoznduasj6JVcwg/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly92ZWN0/b3JpZmllZC5jb20v/aW1hZ2VzL2lyb24t/dGhyb25lLWljb24t/Ny5wbmc", "desc": "The ultimate symbol of conquest and rule over the Seven Kingdoms of Westeros." },
+
+    /* --- HOUSE TARGARYEN --- */
+    { "id": "TARG", "name": "House Targaryen", "parent": "IT", "type": "house", "size": 130, "img": "https://awoiaf.westeros.org/images/thumb/1/1e/House_Targaryen.svg/375px-House_Targaryen.svg.png", "desc": "A noble family of Valyrian descent who ruled Westeros for nearly 300 years." },
+    { "id": "aegon_i", "name": "Aegon I", "parent": "TARG", "size": 100, "str": "Conquest", "weak": "Dorne", "death": "Dead", "spouse": "Visenya & Rhaenys", "desc": "The Conqueror who forged the Iron Throne and united the realm atop Balerion.","img":"https://awoiaf.westeros.org/images/7/73/AEGON_I.jpg" },
+    { "id": "aenys_i", "name": "Aenys I", "parent": "aegon_i", "size": 95, "str": "Diplomacy", "weak": "Indecision", "death": "Dead", "spouse": "Alyssa Velaryon", "desc": "A well-meaning but weak king whose reign was plagued by the Faith Militant.","img":"https://static.wikia.nocookie.net/gameofthrones/images/7/76/Aenys_I_Targaryen.png/revision/latest?cb=20160313083909" },
+    { "id": "maegor_i", "name": "Maegor I", "parent": "aegon_i", "size": 95, "str": "Terror", "weak": "Cruelty", "death": "Dead", "spouse": "Ceryse Hightower & Alys Harroway & Tyanna", "desc": "Known as 'The Cruel', he seized the throne and ruthlessly crushed his enemies." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTK_-Ttje3ilGNVrfu7QjcVcA_LWDGXBQCvIG84bTqnddVk4au7_ah6pTAvN2U_t0fAp9nzobO24MXz5Ai3qYq5yAIklJ4RWdvQ6JZH37A&s"},
+    { "id": "jaehaerys_i", "name": "Jaehaerys I", "parent": "aenys_i", "size": 95, "str": "Law", "weak": "Succession", "death": "Dead", "spouse": "Alysanne", "married_to": ["alysanne_t"], "desc": "The Conciliator, ruled for decades of peace and built the Kingsroad.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcZc0H6c_hSMS2ah-U4OW4gC2NtkH7FnvjKNeexei0qxiPE1QLcruj2pyl96GM8o8qTRUr&s" },
+    { "id": "alysanne_t", "name": "Alysanne", "parent": "aenys_i", "size": 90, "str": "Charity", "weak": "Grief", "death": "Dead", "spouse": "Jaehaerys I", "married_to": ["jaehaerys_i"], "desc": "The Good Queen, a tireless champion for the smallfolk and the Night's Watch." ,"img":"https://awoiaf.westeros.org/images/thumb/5/55/Alysanne.jpg/350px-Alysanne.jpg"},
+    { "id": "aemon_t1", "name": "Aemon", "parent": "jaehaerys_i", "size": 85, "str": "Duty", "weak": "Crossbows", "death": "Dead", "spouse": "Jocelyn Baratheon", "desc": "The valiant Prince of Dragonstone whose tragic death altered the succession." ,"img":"https://awoiaf.westeros.org/images/thumb/2/21/Aemon_by_Udel_Art.jpg/525px-Aemon_by_Udel_Art.jpg"},
+    { "id": "baelon_t", "name": "Baelon", "parent": "jaehaerys_i", "size": 85, "str": "Bravery", "weak": "Health", "death": "Dead", "spouse": "Alyssa Targaryen", "desc": "The Brave, a beloved prince whose sudden death forced the Great Council of 101." ,"img":"https://awoiaf.westeros.org/images/thumb/b/b4/Baelon_Targaryen_by_Riotarttherite.png/525px-Baelon_Targaryen_by_Riotarttherite.png"},
+    { "id": "viserys_i", "name": "Viserys I", "parent": "baelon_t", "size": 90, "str": "Feasts", "weak": "Passivity", "death": "Dead", "spouse": "Aemma Arryn & Alicent Hightower", "desc": "A peaceful king whose avoidance of conflict planted the seeds for civil war.","img":"https://static.wikia.nocookie.net/gameofthrones/images/3/38/Viserys_I_Targaryen_Official_Guide.jpg/revision/latest?cb=20220826232345" },
+    { "id": "daemon_t", "name": "Daemon", "parent": "baelon_t", "size": 90, "str": "Combat", "weak": "Temper", "death": "Dead", "spouse": "Rhea Royce & Laena Velaryon & Rhaenyra", "married_to": ["rhaenyra"], "desc": "The Rogue Prince, a legendary and highly unpredictable warrior." ,"img":"https://static.wikia.nocookie.net/gameofthrones/images/a/a0/Daemon_Targaryen_S2_Infobox.png/revision/latest?cb=20231202204159"},
+    { "id": "rhaenyra", "name": "Rhaenyra", "parent": "viserys_i", "size": 90, "str": "Tenacity", "weak": "Paranoia", "death": "Dead", "spouse": "Laenor Velaryon & Daemon", "married_to": ["daemon_t"], "desc": "The Half-Year Queen, fought fiercely for her birthright during the Dance.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRz8JhLSaSUhkkqBZT2ik1a565XfgDlSMhc2Q&s" },
+    { "id": "aegon_ii", "name": "Aegon II", "parent": "viserys_i", "size": 85, "str": "Will", "weak": "Lust", "death": "Dead", "spouse": "Helaena", "married_to": ["helaena_t"], "desc": "Usurped his half-sister's throne, leading to a devastating Targaryen civil war." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMBmyI1QZ9tsAmvW9s04AVxWa5wfvTQ4Ldag&s"},
+    { "id": "helaena_t", "name": "Helaena", "parent": "viserys_i", "size": 85, "str": "Prophecy", "weak": "Depression", "death": "Dead", "spouse": "Aegon II", "married_to": ["aegon_ii"], "desc": "A gentle queen possessed by cryptic visions, driven mad by unimaginable grief.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQskAi6Mf_7E4ioPj9eKQyZsTbq8asDpkq-vg&s" },
+    { "id": "aemond_t", "name": "Aemond", "parent": "viserys_i", "size": 85, "str": "Vhagar", "weak": "Eye", "death": "Dead", "spouse": null, "desc": "A fierce and vengeful prince who claimed the largest dragon in the world.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWHrPVFR9mXLeCvCZMqefsFABIZD4wcWCZ9Q&s" },
+    { "id": "daeron_t_son", "name": "Daeron the Daring", "parent": "viserys_i", "size": 80, "str": "Kindness", "weak": "Small", "death": "Dead", "spouse": null, "desc": "The youngest son of Alicent, known for his bravery and gentle nature.","img":"https://awoiaf.westeros.org/images/thumb/9/9b/Daeron_the_Daring_by_Lopata4.jpg/1200px-Daeron_the_Daring_by_Lopata4.jpg" },
+    { "id": "jacaerys_v", "name": "Jacaerys Velaryon", "parent": "rhaenyra", "size": 85, "str": "Diplomacy", "weak": "Origin", "death": "Dead", "spouse": null, "desc": "A capable leader and diplomat who secured crucial alliances for his mother." ,"img":"https://preview.redd.it/new-still-of-prince-jacaerys-velaryon-in-tonights-episode-v0-z2v8x79dkicd1.jpeg?width=640&crop=smart&auto=webp&s=cb9fc63ab8d2d6867c98b960e3037bfb509d8bb7"},
+    { "id": "lucerys_v", "name": "Lucerys Velaryon", "parent": "rhaenyra", "size": 85, "str": "Obedience", "weak": "Arrogance", "death": "Dead", "spouse": null, "desc": "A dutiful son whose death in the storm over Shipbreaker Bay sparked all-out war.","img":"https://static.wikia.nocookie.net/gameofthronesfanon/images/7/7a/TLOTT_Rhaenyra_Family_Still.jpg/revision/latest/thumbnail/width/360/height/360?cb=20230502122416" },
+    { "id": "joffrey_v", "name": "Joffrey Velaryon", "parent": "rhaenyra", "size": 80, "str": "Bravery", "weak": "Storm", "death": "Dead", "spouse": null, "desc": "A young prince desperate to prove his courage in battle.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_9gUowbvVgxTUqncF_xXdRTXRA_gOJeBe5eqSTubNuOSr8Kspu0XyyNFXgyeMvI7T1RTYGw&s" },
+    { "id": "aegon_iii", "name": "Aegon III", "parent": "rhaenyra", "size": 90, "str": "Governance", "weak": "Sadness", "death": "Dead", "spouse": "Daenaera Velaryon", "desc": "The Dragonbane, a deeply traumatized king who presided over the death of the dragons.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLI4qEGZjnsER7MWzX4lOeNy7E1GbphO41twUIL6t0MHktQM5W-P3H4HOpJsS_JCduOCbL9IafrcKw5WF-9TjJx6jsT0SX_CYKuq-38Q&s=10" },
+    { "id": "viserys_ii", "name": "Viserys II", "parent": "rhaenyra", "size": 90, "str": "Wisdom", "weak": "Health", "death": "Dead", "spouse": "Larra Rogare", "desc": "A brilliant Hand of the King who briefly ruled as an astoundingly capable monarch.","img":"https://awoiaf.westeros.org/images/a/ad/VISERYS_II.jpg" },
+    { "id": "aegon_iv", "name": "Aegon IV", "parent": "viserys_ii", "size": 95, "str": "None", "weak": "Greed", "death": "Dead", "spouse": "Naerys", "desc": "The Unworthy, a corrupt king who legitimized his bastards on his deathbed.","img":"https://awoiaf.westeros.org/images/5/59/AEGON_IV.jpg" },
+    { "id": "daeron_ii", "name": "Daeron II", "parent": "aegon_iv", "size": 90, "str": "Unity", "weak": "Physique", "death": "Dead", "spouse": "Myriah Martell", "desc": "The Good, brought Dorne into the realm and faced the first Blackfyre Rebellion." ,"img":"https://awoiaf.westeros.org/images/a/ae/DAERON_II.jpg"},
+    { "id": "daemon_bf", "name": "Daemon Blackfyre", "parent": "aegon_iv", "size": 90, "str": "Martial", "weak": "Legitimacy", "death": "Dead", "spouse": "Rohanne", "desc": "The King Who Bore the Sword, rebelled against his half-brother for the throne.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHKg5qrcZPnxhLWe_UcmFt2p715eRCYKalQLxrN8b9I0cRScurB2Ib1lydxzJfe9f1GOwzCQ&s" },
+    { "id": "brynden_rivers", "name": "Brynden Rivers", "parent": "aegon_iv", "size": 90, "str": "Sorcery", "weak": "Loyalty", "death": "Dead", "spouse": null, "desc": "Bloodraven, a feared spymaster who later became the Three-Eyed Crow.","img":"https://static.wikia.nocookie.net/gameofthrones/images/a/a8/Oathbreaker_05.jpg/revision/latest?cb=20170818202718" },
+    { "id": "shiera_seastar", "name": "Shiera Seastar", "parent": "aegon_iv", "size": 85, "str": "Beauty", "weak": "Mystery", "death": "Dead", "spouse": null, "desc": "A famously beautiful and enigmatic woman rumored to dabble in dark arts.","img":"https://static.wikia.nocookie.net/gameofthrones/images/4/42/Roman_Papsuev_-_Shiera_Seastar.jpg/revision/latest/scale-to-width-down/300?cb=20230701113204" },
+    { "id": "baelor_break", "name": "Baelor Breakspear", "parent": "daeron_ii", "size": 85, "str": "Honor", "weak": "Fragility", "death": "Dead", "spouse": "Jena Dondarrion", "desc": "A paragon of chivalry who tragically died defending a humble hedge knight.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyePMqUetr1yexbBzXmuXW0Ip_MhmM05ihomHff_WpthcVLoZLxsGXeXfwMia6g04lxMzM&s" },
+    { "id": "maekar_i", "name": "Maekar I", "parent": "daeron_ii", "size": 85, "str": "Strength", "weak": "Solitude", "death": "Dead", "spouse": "Dyanna Dayne", "desc": "A harsh, unforgiving king overshadowed by the memory of the brother he accidentally killed." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQy1UzN7wUCqmPVHbNygTzZQZ8s2fJX5vQ837Gh4fbQu7SnB7qheogsOaEU24rnon_3YaJV3CZfzDQV32JykpFUAVJq8wmcmeIjfk-GZA&s"},
+    { "id": "aemon_maester", "name": "Maester Aemon", "parent": "maekar_i", "size": 90, "str": "Knowledge", "weak": "Vows", "death": "Dead", "spouse": null, "desc": "Refused the crown to serve humbly at the Wall, living to see a hundred years.","img":"https://oyster.ignimgs.com/mediawiki/apis.ign.com/game-of-thrones/0/0d/Aemon.jpg" },
+    { "id": "aegon_v", "name": "Aegon V", "parent": "maekar_i", "size": 95, "str": "Reform", "weak": "Summerhall", "death": "Dead", "spouse": "Betha Blackwood", "desc": "Aeg the Unlikely, championed the smallfolk before dying in a mysterious fire." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQlxBYTfl2xfpFjf_HfLbMzNg1rZaJPGRIL3A&s"},
+    { "id": "duncan_small", "name": "Prince Duncan", "parent": "aegon_v", "size": 85, "str": "Love", "weak": "Jenny", "death": "Dead", "spouse": "Jenny of Oldstones", "desc": "Gave up his claim to the throne to marry a strange, woodland girl he loved." ,"img":"https://awoiaf.westeros.org/images/thumb/5/5d/Duncan_Targaryen_by_Karla_Ortiz.jpg/350px-Duncan_Targaryen_by_Karla_Ortiz.jpg"},
+    { "id": "jaehaerys_ii", "name": "Jaehaerys II", "parent": "aegon_v", "size": 90, "str": "Thought", "weak": "Sickly", "death": "Dead", "spouse": "Shaera", "desc": "A sickly but shrewd king who ended the Blackfyre threat in the Stepstones." ,"img":"https://awoiaf.westeros.org/images/e/eb/JAEHAERYS_II.jpg"},
+    { "id": "aerys_ii", "name": "Aerys II", "parent": "jaehaerys_ii", "size": 100, "str": "Lineage", "weak": "Madness", "death": "Dead", "spouse": "Rhaella", "desc": "The Mad King, whose paranoia and obsession with wildfire destroyed his dynasty." ,"img":"https://images.immediate.co.uk/production/volatile/sites/3/2022/09/King-Aerys-Targaryen-Game-of-Thrones-c21166b.jpg?resize=620%2C325"},
+    { "id": "rhaegar", "name": "Rhaegar", "parent": "aerys_ii", "size": 95, "str": "Charisma", "weak": "Obsession", "death": "Dead", "spouse": "Elia Martell & Lyanna Stark", "married_to": ["lyanna_s"], "desc": "A melancholy prince whose fateful romance plunged the Seven Kingdoms into rebellion." ,"img":"https://static.wikia.nocookie.net/gameofthrones/images/5/51/Rhaeger_main_infobox.png/revision/latest?cb=20210722174123"},
+    { "id": "viserys_t", "name": "Viserys T", "parent": "aerys_ii", "size": 85, "str": "Persistence", "weak": "Pride", "death": "Dead", "spouse": null, "desc": "The Beggar King, a cruel and desperate exile who died for a golden crown." ,"img":"https://static.wikia.nocookie.net/gameofthrones/images/4/46/Viseryspromoheadshot.jpg/revision/latest?cb=20210722093457"},
+    { "id": "dany", "name": "Daenerys", "parent": "aerys_ii", "size": 95, "str": "Dragons", "weak": "Mercy", "death": "Dead", "spouse": "Khal Drogo & Jon Snow", "married_to": ["jon_s"], "desc": "The Mother of Dragons, who rose from nothing to conquer cities and burn armies.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWvK93tS5ImyMfh0VGSjXEoxckYK8eU9KwDw&s" },
+    { "id": "jon_s", "name": "Jon Snow", "parent": "rhaegar", "size": 90, "str": "Blade", "weak": "Honor", "death": "Alive", "spouse": "Daenerys", "married_to": ["dany"], "desc": "The secret heir to the Iron Throne, sworn to protect the realms of men.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPBhX5n7epcQF9f_zrJXqUekPUTgQXPDyJfA&s" },
+
+    /* --- HOUSE BARATHEON --- */
+    { "id": "BARA", "name": "House Baratheon", "parent": "IT", "type": "house", "size": 130, "img": "https://awoiaf.westeros.org/images/thumb/2/2d/House_Baratheon.svg/250px-House_Baratheon.svg.png", "desc": "Furious as the storm, this house famously unseated the dragon kings." },
+    { "id": "orys_b", "name": "Orys", "parent": "BARA", "size": 100, "str": "Command", "weak": "Origin", "death": "Dead", "spouse": "Argella Durrandon", "desc": "Rumored bastard brother to Aegon the Conqueror and the first Lord of Storm's End.","img":"https://awoiaf.westeros.org/images/thumb/6/67/Orys_B.jpg/350px-Orys_B.jpg" },
+    { "id": "steffon_b", "name": "Steffon", "parent": "BARA", "size": 95, "str": "Stability", "weak": "Storms", "death": "Dead", "spouse": "Cassana Estermont", "desc": "A close friend of the Mad King whose tragic drowning orphaned his three famous sons.","img":"https://static.wikia.nocookie.net/ironthronerp/images/c/c7/SteffonBaratheon.jpg/revision/latest/thumbnail/width/360/height/360?cb=20151030045034" },
+    { "id": "robert", "name": "Robert", "parent": "steffon_b", "size": 100, "str": "Warfare", "weak": "Excess", "death": "Dead", "spouse": "Cersei", "married_to": ["cersei"], "desc": "A legendary warrior who won the throne, only to grow fat and miserable holding it.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgRyeBsBcmEwuz_jFEHKp5zyPy3hZyeYzo9QZE8UjYGk1TMNzpmQJNJbridVINtIq_dCDnyUHlll-29ilwFnu3syGq9JOkKSjXVaRDUA&s" },
+    { "id": "stannis", "name": "Stannis", "parent": "steffon_b", "size": 95, "str": "Discipline", "weak": "Rigidity", "death": "Dead", "spouse": "Selyse Florent", "desc": "A brilliant, unbending commander who pursues his claim with ruthless, grim justice." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQW3T3grslYGStyk6aGiIMdAr9kq37JEYBxFw&s"},
+    { "id": "renly", "name": "Renly", "parent": "steffon_b", "size": 95, "str": "Charm", "weak": "Hubris", "death": "Dead", "spouse": "Margaery Tyrell", "married_to": ["margaery"], "desc": "Charismatic and well-loved, he thought wearing a crown would be as easy as wearing a smile.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS02dOMfSDol4sUAFbdDA2SqBxnxzTmNn3VlGSZ5DWceW2WJmEs7R1w8m8UTsXXmwvcG7qOf-x8WHBl892i3omzr3NU1yEpEP03PQsVdA&s=10" },
+    { "id": "joffrey", "name": "Joffrey", "parent": "robert", "size": 85, "str": "Power", "weak": "Cruelty", "death": "Dead", "spouse": "Margaery", "married_to": ["margaery"], "desc": "A sadistic and arrogant boy-king whose cruelty sparked the War of the Five Kings.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQePGS-uxcQL7-a30aqNyg9GcXCypveH47iQOrVYnS8UWVTKH2AmfyOmHK4lBesXJ8wRYOALK-9c9mXs2zvYeT3R6aS-XMTIM2fb7I_Fc4&s=10" },
+    { "id": "myrcella", "name": "Myrcella", "parent": "robert", "size": 85, "str": "Grace", "weak": "Dorne", "death": "Dead", "spouse": "Trystane Martell", "married_to": ["trystane"], "desc": "A gentle princess used as a political pawn between rival, warring factions." ,"img":"https://upload.wikimedia.org/wikipedia/en/f/fc/MyrcellaBaratheonGoT.jpg"},
+    { "id": "tommen", "name": "Tommen", "parent": "robert", "size": 85, "str": "Kindness", "weak": "Youth", "death": "Dead", "spouse": "Margaery", "married_to": ["margaery"], "desc": "A sweet, impressionable boy completely ill-equipped for the vicious politics of King's Landing.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLGSXWAn7lf1gMqDa7w4siYxW_ZFnqv-mvEB_BZ9KmagWDswTd2ML-8P9q26srkEGDa50kKxsthU2kLlp8-wc57yq1fs7imsXEp4_EGg&s" },
+    { "id": "gendry", "name": "Gendry", "parent": "robert", "size": 80, "str": "Strength", "weak": "Birth", "death": "Alive", "spouse": null, "desc": "A skilled blacksmith oblivious to the royal blood pounding in his veins." ,"img":"https://static.wikia.nocookie.net/game_of_thrones_-_the_storm_kings_fanon/images/1/1f/Gendry_I_Baratheon.jpg/revision/latest?cb=20230823132932"},
+    { "id": "shireen", "name": "Shireen", "parent": "stannis", "size": 75, "str": "Learning", "weak": "Greyscale", "death": "Dead", "spouse": null, "desc": "A kind and innocent girl scarred by greyscale and betrayed by her own family's ambition.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzDY1THyI0a1xZ7UMrobgvGCS91lmXMvKoHiQTwBtuATzH-9rk96Km_fvJu2Qwzpqe9aecAwD1VPOow1F1srn5EHbEjkSBleV3NMGw4A&s=10" },
+    { "id": "edric_storm", "name": "Edric Storm", "parent": "robert", "size": 75, "str": "Lineage", "weak": "Bastardy", "death": "Alive", "spouse": null, "desc": "An acknowledged bastard who serves as a living breathing testament to Robert's appearance.","img":"https://awoiaf.westeros.org/images/thumb/8/82/Edric_Storm.jpg/350px-Edric_Storm.jpg" },
+    { "id": "mya_stone", "name": "Mya Stone", "parent": "robert", "size": 75, "str": "Hiking", "weak": "Fear", "death": "Alive", "spouse": null, "desc": "A brave, sure-footed guide in the Vale who knows nothing of her father's identity.","img":"https://awoiaf.westeros.org/images/thumb/0/08/Heliotropa_Mya_Stone.jpg/450px-Heliotropa_Mya_Stone.jpg"},
+    
+    /* --- HOUSE STARK --- */
+    { "id": "STARK", "name": "House Stark", "parent": "IT", "type": "house", "size": 130, "img": "https://awoiaf.westeros.org/images/thumb/7/7e/House_Stark.svg/250px-House_Stark.svg.png", "desc": "The ancient Wardens of the North, whose honor is as enduring as winter." },
+    { "id": "rickard_s", "name": "Rickard", "parent": "STARK", "size": 100, "str": "Ambition", "weak": "Fire", "death": "Dead", "spouse": "Lyarra Stark", "desc": "Sought to build Southern alliances before meeting a horrific end at the hands of the Mad King.","img":"https://static.wikia.nocookie.net/gameofthrones/images/e/eb/Vlcsnap-2016-05-23-02h18m09s851.png/revision/latest/thumbnail/width/360/height/360?cb=20160523052104" },
+    { "id": "brandon_s", "name": "Brandon", "parent": "rickard_s", "size": 90, "str": "Sword", "weak": "Temper", "death": "Dead", "spouse": null, "desc": "The hot-headed Wild Wolf who rode to King's Landing demanding Rhaegar's head.","img":"https://awoiaf.westeros.org/images/thumb/d/d7/Brandon_stark_the_wild_wolf_by_mike_hallstein-dadi0nx.jpeg/350px-Brandon_stark_the_wild_wolf_by_mike_hallstein-dadi0nx.jpeg" },
+    { "id": "ned", "name": "Ned", "parent": "rickard_s", "size": 95, "str": "Loyalty", "weak": "Trust", "death": "Dead", "spouse": "Catelyn", "married_to": ["catelyn"], "desc": "The honorable Lord of Winterfell, whose strict moral code proved fatal in the capital.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsrlubLPtQXbNL10aUXQyVSabgTN8BA-arSQ&s" },
+    { "id": "lyanna_s", "name": "Lyanna", "parent": "rickard_s", "size": 90, "str": "Will", "weak": "Fate", "death": "Dead", "spouse": "Rhaegar", "married_to": ["rhaegar"], "desc": "A wild and beautiful Northern maid whose kidnapping—or elopement—started a war.","img":"https://preview.redd.it/what-do-you-think-about-lyanna-stark-v0-c8nf19srsngf1.jpeg?auto=webp&s=75a01addff8c20b46d91a3fcd23cbb3cf2b63dd3" },
+    { "id": "benjen", "name": "Benjen", "parent": "rickard_s", "size": 85, "str": "Stealth", "weak": "Vows", "death": "Dead", "spouse": null, "desc": "First Ranger of the Night's Watch, disappeared into the haunted forests beyond the Wall." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQH4qPL3_rUEGFJE89fkxQ3XG8UtfZ4UjpCN7HcP45JixS9GB56_tJENTnm1cVOVVaw3yenTAbF1hyTXHgqYn-AQ96IDhys39c6_sHf_Sw&s=10"},
+    { "id": "robb", "name": "Robb", "parent": "ned", "size": 85, "str": "Strategy", "weak": "Oaths", "death": "Dead", "spouse": "Talisa", "desc": "The Young Wolf, who never lost a battle but lost his kingdom over a broken vow.","img":"https://upload.wikimedia.org/wikipedia/en/c/ce/Robb_Stark-Richard_Madden.jpg" },
+    { "id": "sansa", "name": "Sansa", "parent": "ned", "size": 85, "str": "Survival", "weak": "Naivety", "death": "Alive", "spouse": "Tyrion & Ramsay", "married_to": ["tyrion"], "desc": "Endured unimaginable torment to emerge as a hardened, brilliant political strategist.","img":"https://upload.wikimedia.org/wikipedia/en/7/74/SophieTurnerasSansaStark.jpg" },
+    { "id": "arya", "name": "Arya", "parent": "ned", "size": 85, "str": "Assassination", "weak": "Vendetta", "death": "Alive", "spouse": null, "desc": "A faceless warrior driven by a relentless and bloody desire to avenge her family." ,"img":"https://static.wikia.nocookie.net/gameofthrones/images/b/be/AryaShipIronThrone.PNG/revision/latest?cb=20190520174300"},
+    { "id": "bran", "name": "Bran", "parent": "ned", "size": 85, "str": "Magic", "weak": "Body", "death": "Alive", "spouse": null, "desc": "A broken boy who ventured far north to become the mystical Three-Eyed Raven." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQn8RkFw8yecVp0uTWvQaHijIP_F6phOCTQAiFu8G0ANk8FcuHJNV9zum66XxrIr4HVNml8RRkS_rE6stNJRCQq4Vih4OpNf0AjKi5cqgU&s"},
+    { "id": "rickon", "name": "Rickon", "parent": "ned", "size": 80, "str": "Wild", "weak": "Age", "death": "Dead", "spouse": null, "desc": "The youngest Stark, feral and angry, running straight into the arms of danger." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg6NcGfR16UC9oMmpvdatnBp-dS5HgSDdHl9jowloiJvthNpG5F8MPWpTjMPJFNGJlPcJS32nvH-gjHNfaNRgrGYvQXlk9Q5C7al3COQ&s=10"},
+    
+    /* --- HOUSE LANNISTER --- */
+    { "id": "LANN", "name": "House Lannister", "parent": "IT", "type": "house", "size": 130, "img": "https://awoiaf.westeros.org/images/thumb/d/d5/House_Lannister.svg/250px-House_Lannister.svg.png", "desc": "A massively wealthy house that always pays its debts—and demands total obedience." },
+    { "id": "tytos_l", "name": "Tytos", "parent": "LANN", "size": 95, "str": "Friendship", "weak": "Weakness", "death": "Dead", "spouse": "Jeyne Marbrand", "desc": "A weak lord whose eagerness to please nearly destroyed his family's reputation." ,"img":"https://awoiaf.westeros.org/images/0/01/Tytos_Lannister_by_Amuelia.png"},
+    { "id": "tywin", "name": "Tywin", "parent": "tytos_l", "size": 100, "str": "Governance", "weak": "Family", "death": "Dead", "spouse": "Joanna", "desc": "The ruthless, calculating patriarch who elevated his house to unmatched supremacy.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQM1GwdM7OS5Lpp1KIL_7t4VpIKX58JrI6RS9_M1P_tL8YtYzFW7atmkh763xv7vqVY7frnIjygUegb0LrytjoXBIktTR9gfcmwWyRyV4&s=10" },
+    { "id": "kevan", "name": "Kevan", "parent": "tytos_l", "size": 90, "str": "Duty", "weak": "Tywin", "death": "Dead", "spouse": "Dorna Swyft", "desc": "A dutiful brother who spent his entire life reliably executing Tywin's orders.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQcwKyDWAJRe-7BI3plkQQmux6OZV_LJxkCDfVAgFo9Pjxr58Vopy-jQdT0eevC166CjzsDQ&s" },
+    { "id": "tygett", "name": "Tygett", "parent": "tytos_l", "size": 85, "str": "Martial", "weak": "Shadow", "death": "Dead", "spouse": null, "desc": "An angry warrior who lived his life deeply resentful of his older brother Tywin's shadow." ,"img":"https://awoiaf.westeros.org/images/b/bf/Tygett_Lannister_TheMico.jpg"},
+    { "id": "gerion", "name": "Gerion", "parent": "tytos_l", "size": 85, "str": "Wit", "weak": "Lost", "death": "Dead", "spouse": null, "desc": "The laughing lion who vanished sailing into the smoking ruins of Valyria.","img":"https://awoiaf.westeros.org/images/thumb/4/49/Gerion_Lannister.jpg/525px-Gerion_Lannister.jpg" },
+    { "id": "jaime", "name": "Jaime", "parent": "tywin", "size": 90, "str": "Reflexes", "weak": "Cersei", "death": "Dead", "spouse": "Cersei", "married_to": ["cersei"], "desc": "The Kingslayer, a brilliant swordsman struggling to find honor in a dishonorable world." ,"img":"https://upload.wikimedia.org/wikipedia/en/b/b4/Jaime_Lannister-Nikolaj_Coster-Waldau.jpg"},
+    { "id": "cersei", "name": "Cersei", "parent": "tywin", "size": 90, "str": "Motherhood", "weak": "Paranoia", "death": "Dead", "spouse": "Robert & Jaime", "married_to": ["robert", "jaime"], "desc": "A fiercely protective, deeply paranoid queen who uses manipulation as a weapon.","img":"https://upload.wikimedia.org/wikipedia/en/2/22/Cersei_Lannister_in_Black_Dress_in_Season_5.jpg" },
+    { "id": "tyrion", "name": "Tyrion", "parent": "tywin", "size": 90, "str": "Logic", "weak": "Vices", "death": "Alive", "spouse": "Sansa", "married_to": ["sansa"], "desc": "A brilliant strategic mind cursed with a dwarf's body and a family that loathes him.","img":"https://static.wikia.nocookie.net/gameofthrones/images/9/95/HandoftheKingTyrionLannister.PNG/revision/latest?cb=20190520175204" },
+    { "id": "lancel", "name": "Lancel", "parent": "kevan", "size": 80, "str": "Faith", "weak": "Regret", "death": "Dead", "spouse": null, "desc": "A weak-willed squire who turned to religious extremism to atone for his monumental sins.","img":"https://static.wikia.nocookie.net/gameofthrones/images/a/a5/No_One_09.jpg/revision/latest/thumbnail/width/360/height/450?cb=20170829235034" },
+
+    /* --- HOUSE TYRELL --- */
+    { "id": "TYRE", "name": "House Tyrell", "parent": "IT", "type": "house", "size": 130, "img": "https://i.pinimg.com/736x/97/1e/8a/971e8ae3e5793fd8cff2870df4df1db1.jpg", "desc": "Lords of the fertile Reach, known for chivalry, wealth, and quiet cunning." },
+    { "id": "olenna", "name": "Olenna", "parent": "TYRE", "size": 100, "str": "Wit", "weak": "Age", "death": "Dead", "spouse": "Luthor Tyrell", "desc": "The Queen of Thorns, armed with a razor-sharp wit and a complete lack of moral hesitation.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAdJ3EcixA59pudVN34sRXm8Kotjt3fBEMQJXS0oTVe1QDvPjZWWDEvsgXlB1W1QScoq3bmyklrYWZEtiYG3IXly9alNz3ebuhFbBHyw&s=10" },
+    { "id": "mace_t", "name": "Mace", "parent": "olenna", "size": 90, "str": "Wealth", "weak": "Bluster", "death": "Dead", "spouse": "Alerie Hightower", "desc": "A bombastic, largely incompetent lord propped up by the brilliant women around him.","img":"https://static.wikia.nocookie.net/gameofthrones/images/e/e2/MaceTyrell-Profile.PNG/revision/latest?cb=20160719041706" },
+    { "id": "willas", "name": "Willas", "parent": "mace_t", "size": 85, "str": "Knowledge", "weak": "Leg", "death": "Alive", "spouse": null, "desc": "The scholarly heir to Highgarden, crippled in a youthful jousting accident." ,"img":"https://awoiaf.westeros.org/images/a/a8/WillasTyrell_by_Mikeybooch.jpg"},
+    { "id": "garlan", "name": "Garlan", "parent": "mace_t", "size": 85, "str": "Honor", "weak": "Selfless", "death": "Alive", "spouse": "Leonette Fossoway", "desc": "The Gallant, an incredible swordsman who famously seeks no glory for his deeds.","img":"https://awoiaf.westeros.org/images/0/01/Garlan_Tyrell.jpg" },
+    { "id": "loras", "name": "Loras", "parent": "mace_t", "size": 85, "str": "Speed", "weak": "Passion", "death": "Dead", "spouse": null, "desc": "The Knight of Flowers, highly skilled but driven by reckless passion and grief.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ9EDWzXtZGnRNObRcxzZZ8NyXi9BqZbVs0ie5n-qCKctWlrdnN01DAalPflXH0_9puZuBk7OvmkknZE3Po9oA-Jxe8scbqDdXHAVmPB0w&s=10" },
+    { "id": "margaery", "name": "Margaery", "parent": "mace_t", "size": 90, "str": "Charity", "weak": "Game", "death": "Dead", "spouse": "Renly & Joffrey & Tommen", "married_to": ["renly", "joffrey", "tommen"], "desc": "A master manipulator who uses charm and charity to ruthlessly climb toward the throne." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaMn6rSyf-1kdlBaUtXaFeYMhWN0uUOKvvwuVvDt5Npl_T5BX6joyHuvjPjtb-v-jUpV9z&s"},
+
+    /* --- HOUSE MARTELL --- */
+    { "id": "MART", "name": "House Martell", "parent": "IT", "type": "house", "size": 130, "img": "https://awoiaf.westeros.org/images/thumb/6/60/House_Martell.svg/250px-House_Martell.svg.png", "desc": "The unbowed, unbent, unbroken rulers of the harsh deserts of Dorne." },
+    { "id": "doran", "name": "Doran", "parent": "MART", "size": 95, "str": "Caution", "weak": "Gout", "death": "Dead", "spouse": "Mellario", "desc": "A gout-ridden prince who hides a burning desire for revenge beneath a peaceful facade." ,"img":"https://i.redd.it/szcxalpbiujz.jpg"},
+    { "id": "oberyn", "name": "Oberyn", "parent": "MART", "size": 95, "str": "Poisons", "weak": "Vengeance", "death": "Dead", "spouse": "Ellaria Sand", "desc": "The Red Viper, a deadly fighter seeking spectacular, public vengeance for his murdered sister." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH6bkNW6OH94PoF5cHOgpgZn-BHwLzZ-uR6iX4iunx9E7wfCooQ0z1oUZCokzkp29bSIXuqTBcBohClQ0MCmJ7vbUg0xFuBjMwAg5G5Q&s=10"},
+    { "id": "arianne", "name": "Arianne", "parent": "doran", "size": 85, "str": "Seduction", "weak": "Rash", "death": "Alive", "spouse": null, "desc": "A fiery princess who favors bold, reckless action over her father's endless patience.","img":"https://awoiaf.westeros.org/images/6/61/Ariannemartell1200_tizianobaracchi_by_thaldir-d8zs5u8.jpg" },
+    { "id": "trystane", "name": "Trystane", "parent": "doran", "size": 80, "str": "Kindness", "weak": "Innocence", "death": "Dead", "spouse": "Myrcella", "married_to": ["myrcella"], "desc": "A naive romantic unaware of the deadly games being played all around him." ,"img":"https://pbs.twimg.com/media/EOmndUEUwAEIsZk.jpg"},
+    { "id": "obara", "name": "Obara", "parent": "oberyn", "size": 80, "str": "Spear", "weak": "Stiff", "death": "Dead", "spouse": null, "desc": "The eldest Sand Snake, a humorless, brutally efficient warrior wielding a spear." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTl1g4S2W7RvcDfc0eCB1ZZgLSKc4CHTgURGwnO0GDnoGVXZfYVJ6A7T7lLiupUFMUQrqJJMxlUecPzjJdbSRa-QmbhyHbyRhUCj-b1fA&s=10"},
+    { "id": "nymeria_s", "name": "Nymeria", "parent": "oberyn", "size": 80, "str": "Dagger", "weak": "Arrogance", "death": "Dead", "spouse": null, "desc": "Graceful and elegant, yet perfectly capable of slitting a throat with a hidden blade." ,"img":"https://static.wikia.nocookie.net/gameofthronesfanon/images/3/37/Nymeria_Sand.jpg/revision/latest?cb=20240124184515"},
+    { "id": "tyene", "name": "Tyene", "parent": "oberyn", "size": 80, "str": "Herbology", "weak": "Faith", "death": "Dead", "spouse": null, "desc": "Appears sweet and pious, masking her deadly mastery of lethal poisons.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFIrOUq2e5KuV7MfcS0F5-6rFb7Bb7VPmyhu1ehEVYmHvtbJrm6p4R1QQWVc7mvSxSU8GGXcZ5VujcLheKGQYGnPOiN8Cpl7sOIKEmdw&s=10" },
+
+    /* --- HOUSE GREYJOY --- */
+    { "id": "GREY", "name": "House Greyjoy", "parent": "IT", "type": "house", "size": 130, "img": "https://awoiaf.westeros.org/images/thumb/5/5b/House_Greyjoy.svg/250px-House_Greyjoy.svg.png", "desc": "Ironborn reavers who sow no crops, preferring to pay the iron price for what they take." },
+    { "id": "quellon", "name": "Quellon", "parent": "GREY", "size": 95, "str": "Reform", "weak": "Death", "death": "Dead", "spouse": "Multiple", "desc": "A forward-thinking lord who tried to bring his savage people into mainland civilization.","img":"https://static.wikia.nocookie.net/gameofthrones/images/b/b1/Quellon-Greyjoy.png/revision/latest?cb=20191127140007" },
+    { "id": "balon", "name": "Balon", "parent": "quellon", "size": 90, "str": "Rigidity", "weak": "Old Ways", "death": "Dead", "spouse": "Alannys Harlaw", "desc": "A bitter, foolish traditionalist who led two failed rebellions to restore the Old Ways.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVBKLTcFRHxe7mA_vtGQqabrD2-emuLhYd1gDDaNgZbscWJCsVzyCHkgUAjdUIS3DQIfgZ&s" },
+    { "id": "euron", "name": "Euron", "parent": "quellon", "size": 90, "str": "Fear", "weak": "Chaos", "death": "Dead", "spouse": null, "desc": "The Crow's Eye, a terrifying pirate steeped in dark magic and terrifying ambition.","img":"https://static.wikia.nocookie.net/gameofthrones/images/f/fc/Euron-Profile.PNG/revision/latest/thumbnail/width/360/height/450?cb=20210722093627" },
+    { "id": "theon", "name": "Theon", "parent": "balon", "size": 85, "str": "Archery", "weak": "Identity", "death": "Dead", "spouse": null, "desc": "Tragically caught between the Starks who raised him and the Greyjoys who birthed him.","img":"https://upload.wikimedia.org/wikipedia/en/5/51/Theon_Greyjoy-Alfie_Allen.jpg" },
+    { "id": "yara", "name": "Yara", "parent": "balon", "size": 85, "str": "Sailing", "weak": "Love", "death": "Alive", "spouse": null, "desc": "A fierce, capable ironborn captain respected by her crew and feared by her enemies." ,"img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfRsyyX__Ml5KZ7dSKfCFZCY8elFFhB8I2ycMM64406vxstLNhs_tBJ1XbO9DW0wAGCHw0jFifdKCJs-LNcgcHQITQp3_InN0UYNHumiY&s"},
+
+    /* --- HOUSE TULLY --- */
+    { "id": "TULL", "name": "House Tully", "parent": "IT", "type": "house", "size": 130, "img": "https://awoiaf.westeros.org/images/thumb/6/61/House_Tully.svg/250px-House_Tully.svg.png", "desc": "Lords of the Riverlands, bound by the words: Family, Duty, Honor." },
+    { "id": "hoster", "name": "Hoster", "parent": "TULL", "size": 95, "str": "Protocol", "weak": "Regrets", "death": "Dead", "spouse": "Minisa Whent", "desc": "A proud lord who secured powerful alliances through the strategic marriages of his daughters.","img":"https://awoiaf.westeros.org/images/thumb/1/1d/Jonathan_Standing_HosterT.jpg/350px-Jonathan_Standing_HosterT.jpg" },
+    { "id": "catelyn", "name": "Catelyn", "parent": "hoster", "size": 90, "str": "Duty", "weak": "Family", "death": "Dead", "spouse": "Ned", "married_to": ["ned"], "desc": "Fiercely devoted to her children, she made fateful choices that ignited continent-wide war.","img":"https://static.wikia.nocookie.net/gameofthrones/images/d/d8/CatelynS3Promo.jpg/revision/latest?cb=20190427043743" },
+    { "id": "edmure", "name": "Edmure", "parent": "hoster", "size": 85, "str": "People", "weak": "Folly", "death": "Alive", "spouse": "Roslin Frey", "desc": "A well-meaning but tactically inept lord who genuinely cares for his people.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcvBEDahLJ8cDS4IALbV9n4Y0B4jhAWPntq_DXemP_D8fRQ6hZ7iKNU2l9anmSnOTMBEylD5z6iN-x2zvYJvqoP-RtmrIW_uboeftl7i0&s" },
+    { "id": "brynden_black", "name": "Brynden Tully", "parent": "TULL", "size": 90, "str": "Tactics", "weak": "Stubborn", "death": "Dead", "spouse": null, "desc": "The Blackfish, a legendary and stubborn scout who refuses to surrender his home.","img":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRrGfUZ6dVJy8jHTLcMXNYbY5PxgkEvcT8CeCbGqo8uzvVW7o_b-71fOfTxWFBynGt6WEhab5T_Eze3qTi6LFlGlJXPN2ppM-_9CQy2buI&s=10" }
+  ]
+};
+
+const nodes = data.nodes;
+const links = [];
+
+nodes.forEach(d => {
+    if (d.parent) links.push({ source: d.parent, target: d.id, relation: "blood" });
+    if (d.married_to) {
+        d.married_to.forEach(spouseId => {
+            const exists = links.find(l => 
+                (l.source === spouseId && l.target === d.id) || 
+                (l.source === d.id && l.target === spouseId && l.relation === "marriage")
+            );
+            if (!exists) links.push({ source: d.id, target: spouseId, relation: "marriage" });
+        });
+    }
+});
+
+nodes.forEach(d => {
+    d.x = (Math.random() - 0.5) * width;
+    d.y = (Math.random() - 0.5) * height;
+});
+
+const zoom = d3.zoom().scaleExtent([0.1, 3]).on("zoom", e => {
+    g.attr("transform", e.transform);
+    d3.select("#stars-far").style("transform", `translate(${e.transform.x * 0.05}px, ${e.transform.y * 0.05}px)`);
+    d3.select("#stars-near").style("transform", `translate(${e.transform.x * 0.1}px, ${e.transform.y * 0.1}px)`);
+});
+
+const svg = d3.select("#viz").append("svg").attr("viewBox", [-width/2, -height/2, width, height]).call(zoom);
+const g = svg.append("g");
+
+const simulation = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(links).id(d => d.id)
+        .distance(d => d.source.type === 'center' ? 400 : d.relation === 'marriage' ? 300 : 120)
+        .strength(d => d.source.type === 'center' ? 1 : d.relation === 'marriage' ? 0.15 : 0.8)
+    )
+    .force("charge", d3.forceManyBody().strength(-6000)) 
+    .force("collide", d3.forceCollide().radius(d => (d.size / 2) + 40).iterations(3)) 
+    .force("x", d3.forceX(0).strength(0.03))
+    .force("y", d3.forceY(0).strength(0.03));
+
+const link = g.append("g").selectAll("line").data(links).join("line")
+    .attr("class", d => d.relation === "marriage" ? "link-marriage" : "link-blood");
+
+function getDescendants(nodeId, allNodes) {
+    let descendants = [nodeId];
+    const children = allNodes.filter(n => n.parent === nodeId);
+    children.forEach(child => {
+        descendants = descendants.concat(getDescendants(child.id, allNodes));
+    });
+    return descendants;
+}
+
+const node = g.append("g").selectAll("g").data(nodes).join("g")
+    .call(d3.drag()
+        .on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+        .on("end", (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }))
+    .on("mouseenter", showCard)
+    .on("mouseleave", hideCard)
+    .on("click", (e, d) => {
+        e.stopPropagation(); 
+        
+        if (d.id === 'IT') {
+            resetFocus();
+            return;
+        }
+
+        // Trace back to the root house
+        let houseNode = d;
+        while (houseNode.parent && houseNode.parent !== 'IT') {
+            let parentNode = nodes.find(n => n.id === houseNode.parent);
+            if (parentNode) houseNode = parentNode;
+            else break;
+        }
+
+        const familyMembers = getDescendants(houseNode.id, nodes);
+        
+        // Fading logic
+        node.classed("node-faded", n => !familyMembers.includes(n.id) && n.id !== 'IT');
+        link.classed("link-faded", l => !(familyMembers.includes(l.source.id) || familyMembers.includes(l.target.id)) && l.source.id !== 'IT');
+        
+        const transform = d3.zoomIdentity
+            .translate(window.innerWidth / 2, window.innerHeight / 2)
+            .scale(0.8)
+            .translate(-houseNode.x, -houseNode.y);
+        svg.transition().duration(750).call(zoom.transform, transform);
+    });
+
+node.append("circle").attr("r", d=>d.size/2).attr("fill", "#000").attr("stroke", "var(--gold)").attr("stroke-width", 2);
+node.append("clipPath").attr("id", d=>"clip-"+d.id).append("circle").attr("r", d=>d.size/2);
+node.append("image")
+    .attr("xlink:href", d => d.img)
+    .attr("clip-path", d => `url(#clip-${d.id})`)
+    .attr("x", d => -d.size/2).attr("y", d => -d.size/2)
+    .attr("width", d => d.size).attr("height", d => d.size)
+    .attr("preserveAspectRatio", "xMidYMid slice")
+    .style("pointer-events", "none"); 
+
+function resetFocus() {
+    node.classed("node-faded", false);
+    link.classed("link-faded", false);
+    simulation.alpha(0.5).restart();
+}
+
+svg.on("click", resetFocus);
+
+simulation.on("tick", () => {
+    const it = nodes.find(n => n.id === "IT");
+    if(it) { it.x = 0; it.y = 0; }
+
+    link.attr("x1", d=>d.source.x).attr("y1", d=>d.source.y).attr("x2", d=>d.target.x).attr("y2", d=>d.target.y);
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+});
+
+svg.call(zoom.transform, d3.zoomIdentity.scale(0.5));
+
+function showCard(e, d) {
+    if(d.id === 'IT') return;
+    const card = d3.select("#stat-card");
+    d3.select("#c-name").text(d.name);
+    
+    if(d.type === 'house') {
+        d3.select("#p-content").style("display", "none");
+        d3.select("#h-content").style("display", "block");
+        d3.select("#h-motto").text(d.motto || "Family, Duty, Honor");
+        d3.select("#h-seat").text(d.seat || "Various");
+        d3.select("#h-desc").text(d.desc || "A noble house of Westeros.");
+        d3.select("#c-char-img").style("background-image", `url(${d.img})`);
+        d3.select("#c-house-mini").style("display", "none");
+    } else {
+        d3.select("#p-content").style("display", "block");
+        d3.select("#h-content").style("display", "none");
+        d3.select("#c-spouse").text(d.spouse || "N/A");
+        d3.select("#c-str").text(d.str || "Lineage");
+        d3.select("#c-weak").text(d.weak || "Mortal");
+        d3.select("#c-death").text(d.death || "Dead").style("color", d.death === 'Alive' ? '#00ffaa' : '#ff4444');
+        d3.select("#c-desc").text(d.desc || "A known figure in Westeros.");
+        d3.select("#c-char-img").style("background-image", `url(${d.img || "https://img.icons8.com/color/100/user-male-circle.png"})`);
+        
+        let current = d;
+        while (current && current.type !== 'house') {
+            current = nodes.find(n => n.id === current.parent);
+        }
+        const houseImg = current ? current.img : "https://img.icons8.com/color/100/castle.png";
+        d3.select("#c-house-mini").attr("src", houseImg).style("display", "block");
+    }
+
+    const cardWidth = 320;
+    const cardHeight = 380; 
+    const margin = 10;
+
+    let x, y;
+
+    if (e.pageX > window.innerWidth / 2) x = e.pageX - cardWidth - 20;
+    else x = e.pageX + 20;
+
+    if (e.pageY > window.innerHeight / 2) y = e.pageY - cardHeight - 20;
+    else y = e.pageY + 20;
+
+    if (x < margin) x = margin;
+    if (y < margin) y = margin;
+    if (x + cardWidth > window.innerWidth) x = window.innerWidth - cardWidth - margin;
+    if (y + cardHeight > window.innerHeight) y = window.innerHeight - cardHeight - margin;
+
+    card.style("left", x + "px").style("top", y + "px").style("visibility", "visible");
+}
+
+function hideCard() { d3.select("#stat-card").style("visibility", "hidden"); }
+function toggleTeam() {
+    const isVis = d3.select("#team-modal").style("display") === "block";
+    d3.select("#team-modal").style("display", isVis ? "none" : "block");
+    d3.select("#overlay").style("display", isVis ? "none" : "block");
+}
+function resetView() { 
+    resetFocus();
+    svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.scale(0.5));
+}
+</script>
+
+</body>
+</html>
